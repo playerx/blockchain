@@ -1,0 +1,50 @@
+{
+	"name": "toptal-blockchain",
+	"version": "0.0.1",
+	"author": "Ezeki Zibzibadze",
+	"description": "Demo project for Toptal",
+	"main": "dist/index.js",
+	"types": "dist/index.d.js",
+	"scripts": {
+		"start": "ts-node src",
+		"test": "ts-node ./node_modules/jokio/src/_test",
+		"dev": "nodemon",
+		"build": "tsc"
+	},
+	"dependencies": {
+		"jokio": "^0.2.1"
+	},
+	"devDependencies": {
+		"@types/jest": "22.1.0",
+		"jest": "22.1.4",
+		"nodemon": "1.14.11",
+		"ts-jest": "22.0.1",
+		"ts-node": "4.0.1",
+		"typescript": "2.6.2"
+	},
+	"repository": {
+		"type": "git",
+		"url": ""
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"keywords": [
+		"jok"
+	],
+	"license": "MIT",
+	"jest": {
+		"transform": {
+			"^.+\\.tsx?$": "ts-jest"
+		},
+		"testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+		"moduleFileExtensions": [
+			"ts",
+			"tsx",
+			"js",
+			"jsx",
+			"json",
+			"node"
+		]
+	}
+}
