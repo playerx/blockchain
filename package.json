@@ -16,7 +16,8 @@
 		"apollo-client": "^2.2.7",
 		"apollo-link-ws": "^1.0.7",
 		"jokio": "^0.2.1",
-		"jokio-graphql": "^0.4.0"
+		"jokio-graphql": "^0.4.0",
+		"ws": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/jest": "22.1.0",

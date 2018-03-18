@@ -1,32 +1,26 @@
+import { SubscriptionClient, ClientOptions } from 'subscriptions-transport-ws';
 import { WebSocketLink } from 'apollo-link-ws'
 import ApolloClient from 'apollo-client'
 import { InMemoryCache } from 'apollo-cache-inmemory'
-import { getPlatform } from '.';
+import { getPlatform } from '.'
+import { Peer } from '../model';
 
+const ws = require('ws')
 
-export function connectToPeers({ remoteAddress, port }: ConnectToPeerProps) {
+export function connectToPeers({ endpoint }) {
 
-	const endpoint = `ws://${remoteAddress}:${port}/graphql`
+	return new Promise<Peer>((resolve, reject) => {
 
-	const connectionCallback = (err, result) => {
-		console.log('connectionCallback', err, result)
-	}
-
-	const link = new WebSocketLink({
-		uri: endpoint,
-		options: {
+		const options: ClientOptions = {
 			reconnect: true,
-			connectionCallback
-		},
+			connectionCallback: (err, result) => err
+				? reject(err)
+				: resolve({ endpoint, client: apolloClient, ws: client })
+		}
+
+		const client = new SubscriptionClient(endpoint, options, ws)
+		const link = new WebSocketLink(client)
+		const cache = new InMemoryCache()
+		const apolloClient = new ApolloClient({ link, cache })
 	})
-
-	const cache = new InMemoryCache()
-
-	const apolloClient = new ApolloClient({ link, cache })
-}
-
-
-export interface ConnectToPeerProps {
-	remoteAddress: string
-	port: number
 }
