@@ -12,12 +12,14 @@ export const typeDefs = `
 
 	extend type Mutation {
 		addPeer(endpoint: String!): Peer
+		mineBlock(data: JSON!): Block
 	}
 
 	type Block {
 		id: ID!
 		index: Int!
 		hash: String!
+		data: JSON!
 	}
 
 	type Peer {
@@ -47,7 +49,16 @@ export const resolvers = {
 			)
 		},
 
-		mineBlock: () => { },
+		mineBlock: (_, { data }) => {
+			const dbLoadBlocks = () => db.blocks
+			const dbSaveBlocks = (state) => db.blocks = state
+
+			run(
+				dbLoadBlocks,
+				blockchainDomain.generateNextBlock(data),
+				dbSaveBlocks,
+			)
+		},
 	},
 
 	Block: {

@@ -15,6 +15,7 @@
 		"apollo-cache-inmemory": "^1.1.11",
 		"apollo-client": "^2.2.7",
 		"apollo-link-ws": "^1.0.7",
+		"crypto-js": "^3.1.9-1",
 		"jokio": "^0.2.1",
 		"jokio-graphql": "^0.4.0",
 		"ws": "^5.0.0"

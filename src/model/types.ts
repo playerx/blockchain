@@ -16,3 +16,8 @@ export interface Peer {
 	client: ApolloClient<NormalizedCacheObject>
 	ws: SubscriptionClient
 }
+
+export interface Database {
+	peers: Peer[],
+	blocks: Block[],
+}
