@@ -47,6 +47,19 @@ export const addBlockToChain = (block: Block) => {
 
 	return AddBlockResult.Success
 }
+export const findBlock = ({ index, hash, previousHash }: FindBlockProps) => {
+	const noIndexFilter = index === undefined
+	const noHashFilter = hash === undefined
+	const noPreviousHashFilter = previousHash === undefined
+
+	const result = blockchain.filter(x =>
+		(noIndexFilter || x.index === index) &&
+		(noHashFilter || x.hash === hash) &&
+		(noPreviousHashFilter || x.previousHash === previousHash)
+	)[0]
+
+	return Promise.resolve(result)
+}
 
 
 // types
@@ -57,6 +70,11 @@ export enum AddBlockResult {
 	Success
 }
 
+export interface FindBlockProps {
+	index?: number
+	hash?: string
+	previousHash?: string
+}
 
 
 // internal state

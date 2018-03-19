@@ -1,5 +1,4 @@
 import * as WebSocket from 'ws'
-import { Server } from 'ws'
 import { Message, MessageType, Block } from 'types'
 import { getLatestBlock, getBlockchain, addBlockToChain, AddBlockResult, replaceChain } from 'blockchain'
 
@@ -11,13 +10,26 @@ export const initP2PServer = (port: number) => {
 	console.log('listening websocket p2p port on: ' + port)
 }
 
-export const connectToPeer = (newPeer: string): void => {
-	const ws: WebSocket = new WebSocket(newPeer);
-	ws.on('open', () => initConnection(ws))
-	ws.on('error', () => console.log('connection failed'));
-};
+export const connectToPeer = (url: string) => new Promise((resolve, reject) => {
+	const ws: WebSocket = new WebSocket(url);
+	ws.on('open', () => {
+		initConnection(ws)
+		resolve({
+			endpoint: ws.url,
+			isConnected: isSocketConnected(ws),
+		})
+	})
+	ws.on('error', () => reject('CONNECTION_FAILED'))
+})
 
-export const getSockets = () => sockets
+export const getPeers = (onlyConnected = false) => {
+	return sockets
+		.filter(x => !onlyConnected || isSocketConnected(x))
+		.map(x => ({
+			endpoint: x.url,
+			isConnected: isSocketConnected(x)
+		}))
+}
 
 
 // internal state
@@ -98,6 +110,8 @@ const handleReplaceChain = (receivedBlocks: Block[]) => {
 
 	broadcast({ type: MessageType.RECEIVE_BLOCK, block: getLatestBlock() })
 }
+
+const isSocketConnected = (socket: WebSocket) => (socket.readyState === WebSocket.OPEN)
 
 
 const broadcast = (message: Message) => sockets.forEach(ws => send(ws)(message))

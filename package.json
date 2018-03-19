@@ -12,6 +12,7 @@
 		"build": "tsc"
 	},
 	"dependencies": {
+		"@types/ws": "^4.0.1",
 		"apollo-cache-inmemory": "^1.1.11",
 		"apollo-client": "^2.2.7",
 		"apollo-link-ws": "^1.0.7",
