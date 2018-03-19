@@ -1,4 +1,4 @@
-import { Peer, Block } from "../../model"
+import { Peer, Block } from 'model'
 
 export const addPeer = (peer: Peer) => (state: Peer[]) => {
 	validatePeer(peer)

@@ -1,14 +1,7 @@
 import * as CryptoJS from 'crypto-js'
-import { Block } from "../../model"
+import { Block } from 'model'
+import genesisBlock from 'genesis.block'
 
-export const findBlock = ({ index, hash }) => (state: Block[]) => {
-	const noIndexFilter = !index && (index !== 0)
-
-	return state.filter(x =>
-		(noIndexFilter || x.index === index) &&
-		(!hash || x.hash === hash)
-	)[0]
-}
 export const getBlockId = (block: Block) => `${block.index}_${block.hash}`
 export const getLatestBlock = (state: Block[]) => state[state.length - 1]
 export const generateNextBlock = (data: any) => (state: Block[]) => {
@@ -23,8 +16,36 @@ export const generateNextBlock = (data: any) => (state: Block[]) => {
 		timestamp: nextTimestamp,
 		data,
 	}
-	return addBlock(newBlock)(state)
+
+	if (!isValidNewBlock(newBlock, previousBlock))
+		throw new Error('INVALID_NEW_BLOCK')
+
+	return [...state, newBlock]
 }
+export const replaceChain = (newBlocks) => (blockchain) => {
+	if (isValidChain(newBlocks) && newBlocks.length > blockchain.length) {
+		console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
+		blockchain = [...newBlocks];
+	} else {
+		console.log('Received blockchain invalid');
+		throw new Error('INVALID_NEW_CHAIN')
+	}
+
+	return blockchain;
+}
+export const addBlockToChain = (newBlock: Block) => (blockchain: Block[]) => {
+	if (!isValidNewBlock(newBlock, getLatestBlock(blockchain)))
+		throw new Error('INVALID_NEW_STRUCTURE')
+
+	if (false) {
+		console.log('block is not valid in terms of transactions')
+		throw new Error('INVALID')
+	}
+
+	return [...blockchain, newBlock];
+}
+
+
 
 // Helper functions
 const isValidNewBlock = (newBlock: Block, previousBlock: Block): boolean => {
@@ -45,10 +66,6 @@ const isValidNewBlock = (newBlock: Block, previousBlock: Block): boolean => {
 	}
 	return true
 }
-const addBlock = (newBlock: Block) => (state: Block[]) =>
-	isValidNewBlock(newBlock, getLatestBlock(state))
-		? [...state, newBlock]
-		: [...state]
 const isValidBlockStructure = (block: Block): boolean =>
 	typeof block.index === 'number' &&
 	typeof block.hash === 'string' &&
@@ -62,3 +79,19 @@ const calculateHashForBlock = (block: Block): string =>
 
 const calculateHash = (index: number, previousHash: string, timestamp: number, data: any): string =>
 	CryptoJS.SHA256(index + previousHash + timestamp + JSON.stringify(data)).toString()
+const isValidChain = (blockchainToValidate: Block[]): boolean => {
+	const isValidGenesis = (block: Block): boolean => {
+		return JSON.stringify(block) === JSON.stringify(genesisBlock)
+	}
+
+	if (!isValidGenesis(blockchainToValidate[0])) {
+		return false
+	}
+
+	for (let i = 1; i < blockchainToValidate.length; i++) {
+		if (!isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i - 1])) {
+			return false
+		}
+	}
+	return true
+}

@@ -2,8 +2,8 @@ import { SubscriptionClient, ClientOptions } from 'subscriptions-transport-ws';
 import { WebSocketLink } from 'apollo-link-ws'
 import ApolloClient from 'apollo-client'
 import { InMemoryCache } from 'apollo-cache-inmemory'
-import { getPlatform } from '.'
-import { Peer } from '../model';
+import { Peer } from 'model';
+import { getPlatform } from '../'
 
 const ws = require('ws')
 
