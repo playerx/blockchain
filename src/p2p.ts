@@ -4,14 +4,19 @@ import { getLatestBlock, getBlockchain, addBlockToChain, AddBlockResult, replace
 
 
 // public functions
-export const initP2PServer = (port: number) => {
-	const server: Server = new WebSocket.Server({ port })
+export const initP2PServer = (host: string, port: number) => {
+	serverEndpoint = `://${host}:${port}`
+
+	const server: WebSocket.Server = new WebSocket.Server({ host, port })
 	server.on('connection', (ws: WebSocket) => initConnection(ws))
 	console.log('listening websocket p2p port on: ' + port)
 }
 
-export const connectToPeer = (url: string) => new Promise((resolve, reject) => {
-	const ws: WebSocket = new WebSocket(url);
+export const connectToPeer = (endpoint) => new Promise((resolve, reject) => {
+	if (~endpoint.indexOf(serverEndpoint))
+		throw new Error('CANT_CONNECT_MYSELF')
+
+	const ws: WebSocket = new WebSocket(endpoint);
 	ws.on('open', () => {
 		initConnection(ws)
 		resolve({
@@ -33,6 +38,7 @@ export const getPeers = (onlyConnected = false) => {
 
 
 // internal state
+let serverEndpoint;
 const sockets: WebSocket[] = []
 
 

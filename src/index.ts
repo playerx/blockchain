@@ -10,4 +10,4 @@ run(
 	})
 )
 
-initP2PServer(4000)
+initP2PServer('localhost', 4000)
