@@ -1,6 +1,6 @@
 import { runWith } from "jokio"
-import { getBlockchain, findBlock, addBlockToChain, generateRawNextBlock, getLatestBlock } from 'blockchain'
-import { getPeers, connectToPeer, broadcastLatestBlock } from 'p2p'
+import * as blockchain from 'blockchain'
+import * as p2p from 'p2p'
 import { Block, Peer } from "types";
 
 const run = runWith({ errorFn: err => { throw err } })
@@ -16,10 +16,12 @@ export const typeDefs = `
 	extend type Mutation {
 		addPeer(endpoint: String!): Peer
 		mineBlock(data: JSON!): Block
+		validateBlockchain: Boolean
 	}
 
 	type Block {
 		id: ID!
+		type: BlockType!
 		index: Int!
 		hash: String!
 		createdAt: DateTime!
@@ -27,6 +29,13 @@ export const typeDefs = `
 		previousBlock: Block
 		nextBlock: Block
 	}
+
+	enum BlockType {
+		GENESIS
+		TRANSACTION
+		CUSTOM
+	}
+
 
 	input BlockInput {
 		index: Int!
@@ -48,31 +57,34 @@ export const typeDefs = `
 
 export const resolvers = {
 	Query: {
-		blockchain: () => getBlockchain(),
-		block: (_, props) => findBlock(props),
-		peers: (_, { onlyConnected }) => getPeers(onlyConnected),
+		blockchain: () => blockchain.getBlockchain(),
+		block: (_, props) => blockchain.findBlock(props),
+		peers: (_, { onlyConnected }) => p2p.getPeers(onlyConnected),
 	},
 
 	Mutation: {
-		addPeer: (_, { endpoint }) => connectToPeer(endpoint),
+		addPeer: (_, { endpoint }) => p2p.connectToPeer(endpoint),
 
 		mineBlock: (_, { data }) => {
-			const newBlock = generateRawNextBlock(data)
+			const newBlock = blockchain.generateNextBlockWithData(data)
 			if (!newBlock) {
 				throw new Error('Block generation failed')
 			}
 
-			broadcastLatestBlock()
+			p2p.broadcastLatestBlock()
 
 			return newBlock
 		},
+
+		validateBlockchain: () =>
+			blockchain.isValidChain(blockchain.getBlockchain()),
 	},
 
 	Block: {
 		id: (obj: Block) => `${obj.index}-${obj.hash}`,
 		createdAt: (obj: Block) => new Date(obj.timestamp),
-		previousBlock: (obj: Block) => findBlock({ hash: obj.previousHash }),
-		nextBlock: (obj: Block) => findBlock({ previousHash: obj.hash }),
+		previousBlock: (obj: Block) => blockchain.findBlock({ hash: obj.previousHash }),
+		nextBlock: (obj: Block) => blockchain.findBlock({ previousHash: obj.hash }),
 	},
 
 	Peer: {

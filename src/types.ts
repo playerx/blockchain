@@ -5,7 +5,14 @@ export interface Block<T = any> {
 	hash: string
 	previousHash: string
 	timestamp: number
+	type: BlockType
 	data: T
+}
+
+export enum BlockType {
+	Genesis = 'GENESIS',
+	Transaction = 'TRANSACTION',
+	Custom = 'CUSTOM',
 }
 
 export interface Peer {
@@ -19,7 +26,7 @@ export interface Peer {
 // Messages
 export enum MessageType {
 	REQUEST_LATEST = 'QUERY_LATEST',
-	REQUET_CHAIN = 'QUERY_ALL',
+	REQUEST_CHAIN = 'QUERY_ALL',
 	RECEIVED_LATEST_BLOCK = 'RECEIVED_LATEST_BLOCK',
 	RECEIVED_CHAIN = 'RECEIVED_BLOCKCHAIN',
 }
@@ -29,7 +36,7 @@ export interface QueryLatestMessage {
 }
 
 export interface QueryAllMessage {
-	type: MessageType.REQUET_CHAIN
+	type: MessageType.REQUEST_CHAIN
 }
 
 export interface AddBlockMessage {

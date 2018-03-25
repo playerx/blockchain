@@ -1,7 +1,7 @@
 import { uniqueId } from 'jokio'
 import * as WebSocket from 'ws'
 import { Message, MessageType, Block } from 'types'
-import { getLatestBlock, getBlockchain, addBlockToChain, AddBlockResult, replaceChain } from 'blockchain'
+import * as blockchain from 'blockchain'
 
 type NamedWebSocket = WebSocket & {
 	id?: string,
@@ -37,7 +37,7 @@ export const getPeers = (onlyConnected = false) => sockets
 
 export const broadcastLatestBlock = () => broadcast({
 	type: MessageType.RECEIVED_LATEST_BLOCK,
-	block: getLatestBlock()
+	block: blockchain.getLatestBlock()
 })
 
 
@@ -77,7 +77,7 @@ const handleMessage = (ws: NamedWebSocket, msg: Message) => {
 		case MessageType.REQUEST_LATEST:
 			send(ws)({
 				type: MessageType.RECEIVED_LATEST_BLOCK,
-				block: getLatestBlock()
+				block: blockchain.getLatestBlock()
 			})
 			break
 
@@ -85,10 +85,10 @@ const handleMessage = (ws: NamedWebSocket, msg: Message) => {
 			handleAddBlock(msg.block);
 			break
 
-		case MessageType.REQUET_CHAIN:
+		case MessageType.REQUEST_CHAIN:
 			send(ws)({
 				type: MessageType.RECEIVED_CHAIN,
-				blocks: getBlockchain()
+				blocks: blockchain.getBlockchain()
 			})
 			break
 
@@ -99,39 +99,38 @@ const handleMessage = (ws: NamedWebSocket, msg: Message) => {
 }
 
 const handleAddBlock = (block: Block) => {
-	const result = addBlockToChain(block)
-
-	switch (result) {
-		case AddBlockResult.InvalidBlock:
-			console.log('block structuture not valid')
-			break
-
-		case AddBlockResult.InvalidIndex:
-			console.log('block index not valid')
-			break
-
-		case AddBlockResult.InvalidPreviousHash:
-			console.log('We have to query the chain from our peer')
-			broadcast({ type: MessageType.REQUET_CHAIN })
-			break
-
-		case AddBlockResult.Success:
-			broadcast({ type: MessageType.RECEIVED_LATEST_BLOCK, block });
-			break
-	}
-}
-
-const handleReplaceChain = (receivedBlocks: Block[]) => {
-	if (!replaceChain(receivedBlocks)) {
-		console.log('received blockchain is not valid');
+	if (!blockchain.isValidBlockStructure(block)) {
 		return
 	}
 
-	broadcast({ type: MessageType.RECEIVED_LATEST_BLOCK, block: getLatestBlock() })
+	const latestBlock = blockchain.getLatestBlock()
+	if (block.index <= latestBlock.index) {
+		return
+	}
+
+	if (latestBlock.hash !== block.previousHash) {
+		broadcast({ type: MessageType.REQUEST_CHAIN })
+		return
+	}
+
+	if (!blockchain.addBlockToChain(block)) {
+		return
+	}
+
+	broadcast({ type: MessageType.RECEIVED_LATEST_BLOCK, block })
+}
+
+const handleReplaceChain = (receivedBlocks: Block[]) => {
+	console.log('handleReplaceChain')
+	if (!blockchain.replaceChain(receivedBlocks)) {
+		console.log('handleReplaceChain canceled')
+		return
+	}
+
+	broadcast({ type: MessageType.RECEIVED_LATEST_BLOCK, block: blockchain.getLatestBlock() })
 }
 
 const isSocketConnected = (socket: WebSocket) => (socket.readyState === WebSocket.OPEN)
-
 
 const broadcast = (message: Message) => sockets.forEach(ws => send(ws)(message))
 const send = (ws: WebSocket) => (message: Message) => ws.send(JSON.stringify(message))
