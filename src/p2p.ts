@@ -15,10 +15,19 @@ type NamedWebSocket = WebSocket & {
 export const initP2PServer = (host: string, port: number) => {
 	serverEndpoint = `://${host}:${port}`
 
-	const server: WebSocket.Server = new WebSocket.Server({ host, port })
-	server.on('connection', (ws: NamedWebSocket) => initConnection(ws, false))
+	const wss: WebSocket.Server = new WebSocket.Server({ host, port })
+	wss.on('connection', (ws: NamedWebSocket) => initConnection(ws, false))
 	console.log('listening websocket p2p port on: ' + port)
 }
+
+export const initP2PServer2 = (server) => {
+	// serverEndpoint = `://${host}:${port}`
+
+	const wss: WebSocket.Server = new WebSocket.Server({ server, path: '/blockchain' })
+	wss.on('connection', (ws: NamedWebSocket) => initConnection(ws, false))
+	// console.log('listening websocket p2p port on: ' + port)
+}
+
 
 export const connectToPeer = (endpoint) => new Promise((resolve, reject) => {
 	if (~endpoint.indexOf(serverEndpoint))
@@ -48,6 +57,8 @@ const sockets: NamedWebSocket[] = []
 
 // internal functions
 const initConnection = (ws: NamedWebSocket, isInitiator: boolean) => {
+
+	console.log('connected something')
 
 	ws.id = ws.id || uniqueId()
 	ws.name = isInitiator ? `PRIMARY ${ws.url}` : `SECONDARY ${Date.now()}`
