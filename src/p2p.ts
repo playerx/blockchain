@@ -1,7 +1,7 @@
 import { uniqueId } from 'jokio'
 import * as WebSocket from 'ws'
-import { Message, MessageType, Block } from 'types'
-import * as blockchain from 'blockchain'
+import { Message, MessageType, Block } from './types'
+import * as blockchain from './blockchain'
 
 type NamedWebSocket = WebSocket & {
 	id?: string,

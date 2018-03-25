@@ -6,7 +6,7 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.js",
 	"scripts": {
-		"start": "ts-node -r tsconfig-paths/register ./src/index.ts",
+		"start": "NODE_PATH=./dist node dist",
 		"dev": "nodemon",
 		"dev:node2": "GRAPHQL_PORT=3001 WS_PORT=4001 ts-node -r tsconfig-paths/register ./src/index.ts",
 		"dev:node3": "GRAPHQL_PORT=3002 WS_PORT=4002 ts-node -r tsconfig-paths/register ./src/index.ts",
@@ -19,6 +19,7 @@
 		"apollo-client": "^2.2.7",
 		"apollo-link-ws": "^1.0.7",
 		"crypto-js": "^3.1.9-1",
+		"dotenv": "^5.0.1",
 		"graphql-tag": "^2.8.0",
 		"jokio": "^0.2.1",
 		"jokio-graphql": "^0.4.0",

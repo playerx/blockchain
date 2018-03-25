@@ -1,5 +1,5 @@
 import * as CryptoJS from 'crypto-js';
-import { Block, BlockType } from 'types';
+import { Block, BlockType } from './types';
 
 
 // genesis block
