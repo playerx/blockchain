@@ -22,10 +22,16 @@ const log = (state, context: Context) => {
 	return state
 }
 
-
+const graphqlProps = {
+	port,
+	localSchemas,
+	express: app,
+	endpoint: '/',
+	subscriptions: null
+}
 
 run(
-	graphql({ port, localSchemas, express: app, subscriptions: null }),
+	graphql(graphqlProps),
 	p2p,
 	log
 )
