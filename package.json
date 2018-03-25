@@ -11,6 +11,7 @@
 		"dev:node2": "PORT=3001 ts-node -r tsconfig-paths/register ./src/index.ts",
 		"dev:node3": "GRAPHQL_PORT=3002 WS_PORT=4002 ts-node -r tsconfig-paths/register ./src/index.ts",
 		"test": "ts-node ./node_modules/jokio/src/_test",
+		"deploy": "now && now alias",
 		"build": "tsc"
 	},
 	"dependencies": {
