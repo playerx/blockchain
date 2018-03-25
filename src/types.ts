@@ -8,14 +8,20 @@ export interface Block<T = any> {
 	data: T
 }
 
+export interface Peer {
+	id: string
+	connectTime: number
+	isConnected: boolean
+	messages: Message[]
+}
 
 
 // Messages
 export enum MessageType {
 	REQUEST_LATEST = 'QUERY_LATEST',
 	REQUET_CHAIN = 'QUERY_ALL',
-	RECEIVE_BLOCK = 'ADD_BLOCK',
-	RECEIVE_CHAIN = 'RESPONSE_BLOCKCHAIN',
+	RECEIVED_LATEST_BLOCK = 'RECEIVED_LATEST_BLOCK',
+	RECEIVED_CHAIN = 'RECEIVED_BLOCKCHAIN',
 }
 
 export interface QueryLatestMessage {
@@ -27,17 +33,23 @@ export interface QueryAllMessage {
 }
 
 export interface AddBlockMessage {
-	type: MessageType.RECEIVE_BLOCK
+	type: MessageType.RECEIVED_LATEST_BLOCK
 	block: Block
 }
 
 export interface ResponseBlockchainMessage {
-	type: MessageType.RECEIVE_CHAIN
+	type: MessageType.RECEIVED_CHAIN
 	blocks: Block[]
 }
 
-export type Message =
-	QueryLatestMessage |
-	QueryAllMessage |
-	AddBlockMessage |
-	ResponseBlockchainMessage
+export interface MessageBase {
+	receiveTime?: number
+}
+
+export type Message = MessageBase &
+	(
+		QueryLatestMessage |
+		QueryAllMessage |
+		AddBlockMessage |
+		ResponseBlockchainMessage
+	)

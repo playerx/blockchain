@@ -1,7 +1,7 @@
 import { runWith } from "jokio"
-import { getBlockchain, findBlock } from 'blockchain'
-import { getPeers, connectToPeer } from 'p2p'
-import { Block } from "types";
+import { getBlockchain, findBlock, addBlockToChain, generateRawNextBlock, getLatestBlock } from 'blockchain'
+import { getPeers, connectToPeer, broadcastLatestBlock } from 'p2p'
+import { Block, Peer } from "types";
 
 const run = runWith({ errorFn: err => { throw err } })
 
@@ -16,8 +16,6 @@ export const typeDefs = `
 	extend type Mutation {
 		addPeer(endpoint: String!): Peer
 		mineBlock(data: JSON!): Block
-		# replaceChain(blocks: [BlockInput!]!): Block
-		# addBlock(block: BlockInput): Block
 	}
 
 	type Block {
@@ -38,10 +36,13 @@ export const typeDefs = `
 		previousHash: String!
 	}
 
-
 	type Peer {
-		endpoint: String!
+		id: ID!
+		name: String!
+		connectedAt: DateTime!
+		uptimeInMin: Float!
 		isConnected: Boolean!
+		messages: [JSON]!
 	}
 `
 
@@ -53,19 +54,29 @@ export const resolvers = {
 	},
 
 	Mutation: {
-		addPeer: async (_, { endpoint }) => connectToPeer(endpoint),
+		addPeer: (_, { endpoint }) => connectToPeer(endpoint),
 
-		// mineBlock: (_, { data }) => run(
-		// 	db.loadBlocks,
-		// 	blockchainDomain.generateNextBlock(data),
-		// 	db.saveBlocks,
-		// ),
+		mineBlock: (_, { data }) => {
+			const newBlock = generateRawNextBlock(data)
+			if (!newBlock) {
+				throw new Error('Block generation failed')
+			}
+
+			broadcastLatestBlock()
+
+			return newBlock
+		},
 	},
 
 	Block: {
-		id: (obj: Block) => obj.index + obj.hash,
+		id: (obj: Block) => `${obj.index}-${obj.hash}`,
 		createdAt: (obj: Block) => new Date(obj.timestamp),
 		previousBlock: (obj: Block) => findBlock({ hash: obj.previousHash }),
 		nextBlock: (obj: Block) => findBlock({ previousHash: obj.hash }),
+	},
+
+	Peer: {
+		connectedAt: (obj: Peer) => new Date(obj.connectTime),
+		uptimeInMin: (obj: Peer) => (Date.now() - obj.connectTime) / (1000 * 60)
 	}
 }

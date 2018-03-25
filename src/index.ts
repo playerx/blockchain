@@ -3,11 +3,14 @@ import { graphql } from 'jokio-graphql'
 import localSchemas from 'schema'
 import { initP2PServer } from 'p2p'
 
+const graphqlPort = parseInt(process.env.GRAPHQL_PORT, 10) || 3000
+const wsPort = parseInt(process.env.WS_PORT, 10) || 4000
+
 run(
 	graphql({
-		port: 3000,
+		port: graphqlPort,
 		localSchemas
 	})
 )
 
-initP2PServer('localhost', 4000)
+initP2PServer('localhost', wsPort)

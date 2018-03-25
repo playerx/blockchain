@@ -6,8 +6,10 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.js",
 	"scripts": {
-		"start": "NODE_PATH=./dist node dist",
+		"start": "ts-node -r tsconfig-paths/register ./src/index.ts",
 		"dev": "nodemon",
+		"dev:node2": "GRAPHQL_PORT=3001 WS_PORT=4001 ts-node -r tsconfig-paths/register ./src/index.ts",
+		"dev:node3": "GRAPHQL_PORT=3002 WS_PORT=4002 ts-node -r tsconfig-paths/register ./src/index.ts",
 		"test": "ts-node ./node_modules/jokio/src/_test",
 		"build": "tsc"
 	},

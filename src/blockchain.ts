@@ -1,3 +1,4 @@
+import * as CryptoJS from 'crypto-js';
 import { Block } from 'types';
 
 // genesis block
@@ -61,6 +62,24 @@ export const findBlock = ({ index, hash, previousHash }: FindBlockProps) => {
 	return Promise.resolve(result)
 }
 
+export const generateRawNextBlock = <T>(blockData: T) => {
+	const previousBlock: Block = getLatestBlock()
+	const nextIndex: number = previousBlock.index + 1
+	const nextTimestamp: number = Date.now()
+	const newBlock: Block = mineBlock(nextIndex, previousBlock.hash, nextTimestamp, blockData);
+	const result = addBlockToChain(newBlock)
+
+	switch (result) {
+		case AddBlockResult.Success:
+			return newBlock
+
+		default:
+			console.log(result)
+			return null;
+	}
+}
+
+
 
 // types
 export enum AddBlockResult {
@@ -84,3 +103,16 @@ const blockchain: Block[] = [genesisBlock]
 // internal functions
 const isValidChain = (blocks: Block[]) => true
 const isValidBlockStructure = (block: Block) => true
+
+const mineBlock = <T>(index: number, previousHash: string, timestamp: number, data: T): Block => ({
+	index,
+	data,
+	previousHash,
+	timestamp,
+	hash: calculateHash(index, previousHash, timestamp, data)
+})
+
+const calculateHash = (...items: any[]) => CryptoJS.SHA256(items.reduce(objectsToString, '')).toString();
+const objectsToString = (r, x) => r += stringify(x)
+const stringify = x => typeof x === 'object' ? JSON.stringify(x) : safeToString(x)
+const safeToString = x => x == null ? '' : x.toString()
