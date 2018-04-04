@@ -40,9 +40,11 @@ export const connectToPeer = (endpoint) => new Promise((resolve, reject) => {
 	ws.on('error', () => reject('CONNECTION_FAILED'))
 })
 
-export const getPeers = (onlyConnected = false) => sockets
-	.filter(x => !onlyConnected || isSocketConnected(x))
-	.map(webSocketToPeer)
+export const getPeers = (onlyConnected = false) => {
+	return sockets
+		.filter(x => !onlyConnected || isSocketConnected(x))
+		.map(webSocketToPeer)
+}
 
 export const broadcastLatestBlock = () => broadcast({
 	type: MessageType.RECEIVED_LATEST_BLOCK,
