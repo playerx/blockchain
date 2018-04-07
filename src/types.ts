@@ -77,6 +77,7 @@ export interface TxOut {
 
 export interface Transaction {
 	id: string
+	description?: string
 	txIns: TxIn[]
 	txOuts: TxOut[]
 }

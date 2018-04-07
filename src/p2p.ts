@@ -1,13 +1,13 @@
 import { uniqueId } from 'jokio'
 import * as WebSocket from 'ws'
 import { Message, MessageType, Block } from './types'
-import * as blockchain from './blockchain'
+import * as blockchain from "./blockchain"
 
 type NamedWebSocket = WebSocket & {
 	id?: string,
 	name?: string,
 	connectTime?: number
-	messages?: Message[]
+	messages?: Message[],
 }
 
 
@@ -48,7 +48,7 @@ export const getPeers = (onlyConnected = false) => {
 
 export const broadcastLatestBlock = () => broadcast({
 	type: MessageType.RECEIVED_LATEST_BLOCK,
-	block: blockchain.getLatestBlock()
+	block: blockchain.getLatestBlock(),
 })
 
 
@@ -90,7 +90,7 @@ const handleMessage = (ws: NamedWebSocket, msg: Message) => {
 		case MessageType.REQUEST_LATEST:
 			send(ws)({
 				type: MessageType.RECEIVED_LATEST_BLOCK,
-				block: blockchain.getLatestBlock()
+				block: blockchain.getLatestBlock(),
 			})
 			break
 
@@ -101,13 +101,16 @@ const handleMessage = (ws: NamedWebSocket, msg: Message) => {
 		case MessageType.REQUEST_CHAIN:
 			send(ws)({
 				type: MessageType.RECEIVED_CHAIN,
-				blocks: blockchain.getBlockchain()
+				blocks: blockchain.getBlockchain(),
 			})
 			break
 
 		case MessageType.RECEIVED_CHAIN:
 			handleReplaceChain(msg.blocks);
 			break
+
+		default:
+			break;
 	}
 }
 
