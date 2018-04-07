@@ -7,6 +7,9 @@ export interface Block<T = any> {
 	timestamp: number
 	type: BlockType
 	data: T
+	minerPublicKey: string
+	minerComment: string
+	minerSignature: string
 }
 
 export enum BlockType {

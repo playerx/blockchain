@@ -10,7 +10,7 @@ export const typeDefs = `
 
 	extend type Mutation {
 		sendCoins(data: sendCoinsInput!): Transaction!
-		addBalance(address: String!, description: String): Transaction!
+		mineTransactionBlock(description: String): Block
 	}
 
 	type UnspentTransaction {
@@ -55,10 +55,7 @@ export const resolvers = {
 	},
 
 	Mutation: {
-		sendCoins: (_, { data }) =>
-			app.makeTransfer(data),
-
-		addBalance: (_, { address, description = '' }) =>
-			app.addBalance(address, description),
+		sendCoins: (_, { data }) => app.makeTransfer(data),
+		mineTransactionBlock: (_, { description }) => app.mineNextBlock(null, description)
 	},
 }

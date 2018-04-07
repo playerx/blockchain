@@ -1,9 +1,10 @@
+import config from './config'
+import * as wallet from './domain/wallet'
+import * as p2p from './infrastructure/p2p'
+import { BlockType, Transaction } from 'domain/types';
 import { getLatestBlock, generateNextBlockWithData, getBlockchain } from './domain/blockchain'
 import { getRewardTransaction, createTransaction, setRewardAmount } from './domain/transaction'
 import { getTransactionPool, addToTransactionPool, getUnspentTxOuts } from './domain/transaction-pool'
-import * as wallet from './domain/wallet'
-import config from './config'
-import { BlockType, Transaction } from 'domain/types';
 
 
 let autoBuildTimer = null
@@ -11,24 +12,8 @@ let autoBuildTimer = null
 
 // public api
 export const requestAutoBuildNextBlock = () => {
-
-	const doWork = () => {
-		const address = wallet.getPublicKey()
-		const description = 'Congrats! Reward received.'
-
-		const rewardTx = getRewardTransaction(
-			address,
-			getLatestBlock().index + 1,
-			config.rewardCoins,
-			description
-		)
-
-		generateNextBlock(rewardTx)
-		requestAutoBuildNextBlock()
-	}
-
 	clearTimeout(autoBuildTimer)
-	autoBuildTimer = setTimeout(doWork, config.blockBuildIntervalInSec * 1000)
+	autoBuildTimer = setTimeout(() => mineNextBlock(), config.blockBuildIntervalInSec * 1000)
 }
 
 export const makeTransfer = ({ fromAddress, toAddress, amount, description = '', privateKey }) => {
@@ -52,21 +37,6 @@ export const makeTransfer = ({ fromAddress, toAddress, amount, description = '',
 	onTransactionAdded(length)
 
 	return tx;
-}
-
-export const addBalance = (address: string, description = '') => {
-	const unspentTxOuts = getUnspentTxOuts()
-	const rewardTx = getRewardTransaction(
-		address,
-		getLatestBlock().index + 1,
-		config.rewardCoins,
-		description
-	)
-	const length = addToTransactionPool(rewardTx, unspentTxOuts)
-
-	onTransactionAdded(length)
-
-	return rewardTx;
 }
 
 export const getBalance = (address: string) => {
@@ -97,11 +67,45 @@ export const findTransaction = (id) => {
 	}
 }
 
+export const mineNextBlock = (address = null, rewardTxDescription = 'Congrats! Reward received.') => {
+	const defaultAddress = wallet.getPublicKey()
+
+	const rewardTx = getRewardTransaction(
+		address || defaultAddress,
+		getLatestBlock().index + 1,
+		config.rewardCoins,
+		rewardTxDescription
+	)
+
+	let transactions = getTransactionPool()
+	if (rewardTx) {
+		transactions.unshift(rewardTx)
+	}
+
+	const block = generateNextBlockWithData(
+		BlockType.Transaction,
+		transactions,
+		wallet.getPrivateKey(),
+		wallet.getPublicKey(),
+		'Mined by me!'
+	)
+
+	if (!block) return
+
+
+	onBlockAdded(block)
+
+	requestAutoBuildNextBlock()
+
+	return block
+}
+
 export const start = () => {
 	setRewardAmount(config.rewardCoins)
 	wallet.initWallet()
 	requestAutoBuildNextBlock()
 }
+
 
 
 // events
@@ -112,20 +116,9 @@ const onTransactionAdded = (transactionPoolLength) => {
 		return
 	}
 
-	const block = generateNextBlock()
-	if (block) {
-		// TODO: breadcast latest block
-		requestAutoBuildNextBlock()
-	}
+	mineNextBlock()
 }
 
-
-// helper functions
-const generateNextBlock = (rewardTx = null) => {
-	let transactions = getTransactionPool()
-	if (rewardTx) {
-		transactions.unshift(rewardTx)
-	}
-
-	return generateNextBlockWithData(transactions)
+const onBlockAdded = (block) => {
+	p2p.broadcastLatestBlock()
 }

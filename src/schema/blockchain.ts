@@ -1,18 +1,19 @@
 import * as blockchain from '../domain/blockchain'
-import { Block, Peer } from "../domain/types";
+import { Block, Peer, BlockType } from "../domain/types";
 import * as p2p from '../infrastructure/p2p'
 
 
 export const typeDefs = `
 	extend type Query {
 		blockchain: [Block!]!
+		lastBlock: Block!
 		block(index: Int, hash: String): Block
 		peers(onlyConnected: Boolean): [Peer!]!
 	}
 
 	extend type Mutation {
 		addPeer(endpoint: String!): Peer
-		mineBlock(data: JSON!): Block
+		mineCustomBlock(data: JSON!): Block
 		validateBlockchain: Boolean
 	}
 
@@ -55,6 +56,7 @@ export const typeDefs = `
 export const resolvers = {
 	Query: {
 		blockchain: () => blockchain.getBlockchain(),
+		lastBlock: () => blockchain.getLatestBlock(),
 		block: (_, props) => blockchain.findBlock(props),
 		peers: (_, { onlyConnected }) => p2p.getPeers(onlyConnected),
 	},
@@ -62,8 +64,8 @@ export const resolvers = {
 	Mutation: {
 		addPeer: (_, { endpoint }) => p2p.connectToPeer(endpoint),
 
-		mineBlock: (_, { data }) => {
-			const newBlock = blockchain.generateNextBlockWithData(data)
+		mineCustomBlock: (_, { data }) => {
+			const newBlock = blockchain.generateNextBlockWithData(BlockType.Custom, data, null, null, null)
 			if (!newBlock) {
 				throw new Error('Block generation failed')
 			}

@@ -1,4 +1,4 @@
-import { calculateHash } from './crypto'
+import { calculateHash, sign, verify } from './crypto'
 import { Block, BlockType, UnspentTxOut } from './types';
 import { updateTransactionPool, getUnspentTxOuts } from './transaction-pool';
 import { processTransactions } from './transaction';
@@ -8,12 +8,15 @@ import { processTransactions } from './transaction';
 export const genesisBlock = {
 	type: BlockType.Genesis,
 	index: 0,
-	hash: '00000000',
+	hash: '000000000',
 	previousHash: null,
 	timestamp: 1521988887397,
+	minerPublicKey: '',
+	minerSignature: '',
+	minerComment: '',
 	data: {
 		miners: [
-			'ws://localhost:3000/graphql'
+			'0471fd6e57fffea06af51e059fb9c51d4d520439b61386d88cdd9912018dc2947f8909134c10be793f8a6fe44ae238bcbe508f0e2804e1a34801b73cfbc4d34090'
 		]
 	}
 }
@@ -74,11 +77,20 @@ export const findBlock = ({ index, hash, previousHash }: FindBlockProps) => {
 
 	return Promise.resolve(result)
 }
-export const generateNextBlockWithData = <T>(blockData: T) => {
+export const generateNextBlockWithData = <T>(type: BlockType, blockData: T, privateKey: string, publicKey: string, minerComment: string) => {
 	const previousBlock: Block = getLatestBlock()
 	const nextIndex: number = previousBlock.index + 1
 	const nextTimestamp: number = Date.now()
-	const newBlock: Block = mineBlock(nextIndex, previousBlock.hash, nextTimestamp, blockData)
+	const newBlock: Block = mineBlock(
+		type,
+		nextIndex,
+		previousBlock.hash,
+		nextTimestamp,
+		blockData,
+		publicKey,
+		privateKey,
+		minerComment
+	)
 
 	if (!addBlockToChain(newBlock)) {
 		return false
@@ -89,6 +101,16 @@ export const generateNextBlockWithData = <T>(blockData: T) => {
 export const isValidNewBlock = (newBlock: Block, previousBlock: Block): boolean => {
 	if (!isValidBlockStructure(newBlock)) {
 		console.log('invalid block structure: %s', JSON.stringify(newBlock))
+		return false
+	}
+
+	if (!isValidMinerSignature(newBlock)) {
+		console.log('invalid miner signature on block: %s', JSON.stringify(newBlock))
+		return false
+	}
+
+	if (!~genesisBlock.data.miners.indexOf(newBlock.minerPublicKey)) {
+		console.log('invalid miner, PoA restriction')
 		return false
 	}
 
@@ -119,7 +141,17 @@ export const isValidBlockStructure = (block: Block) =>
 	typeof block.hash === 'string' &&
 	typeof block.previousHash === 'string' &&
 	typeof block.timestamp === 'number' &&
+	typeof block.minerSignature === 'string' &&
 	typeof block.data === 'object'
+
+export const isValidMinerSignature = (block: Block) => {
+	const signedData = Object.assign({}, block)
+	delete signedData['minerSignature']
+
+	const signedDataString = JSON.stringify(signedData)
+
+	return verify(signedDataString, block.minerSignature, block.minerPublicKey)
+}
 
 export const isValidChain = (blocks: Block[]) => {
 	const isValidGenesis = (block: Block): boolean => {
@@ -172,14 +204,27 @@ const isValidTimestamp = (newBlock: Block, previousBlock: Block): boolean => {
 }
 const hasValidHash = (block: Block): boolean => block.hash === calculateHashForBlock(block)
 
-const mineBlock = <T>(index: number, previousHash: string, timestamp: number, data: T): Block => ({
-	type: BlockType.Transaction,
-	index,
-	data,
-	previousHash,
-	timestamp,
-	hash: calculateHash(index, previousHash, timestamp, data)
-})
+const mineBlock = <T>(type: BlockType, index: number, previousHash: string, timestamp: number, data: T, publicKey, privateKey, minerComment): Block => {
+	const block = {
+		type,
+		index,
+		data,
+		previousHash,
+		timestamp,
+		hash: calculateHash(index, previousHash, timestamp, data),
+		minerPublicKey: publicKey,
+		minerComment,
+	}
+
+	const minerSignature = privateKey
+		? sign(privateKey, JSON.stringify(block))
+		: null
+
+	return {
+		...block,
+		minerSignature,
+	};
+}
 
 const calculateHashForBlock = (block: Block): string => calculateHash(block.index, block.previousHash, block.timestamp, block.data);
 
