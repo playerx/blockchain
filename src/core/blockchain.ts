@@ -1,4 +1,4 @@
-import * as CryptoJS from 'crypto-js';
+import { calculateHash } from './crypto'
 import { Block, BlockType } from './types';
 
 
@@ -143,6 +143,7 @@ export const isValidChain = (blocks: Block[]) => {
 	return true
 }
 
+
 // function types
 export interface FindBlockProps {
 	index?: number
@@ -155,15 +156,12 @@ export interface FindBlockProps {
 const blockchain: Block[] = [genesisBlock]
 
 
-// internal functions
+// helper functions
 const isValidTimestamp = (newBlock: Block, previousBlock: Block): boolean => {
 	return (previousBlock.timestamp < newBlock.timestamp)
 		&& (newBlock.timestamp <= Date.now())
 }
 const hasValidHash = (block: Block): boolean => block.hash === calculateHashForBlock(block)
-
-
-
 
 const mineBlock = <T>(index: number, previousHash: string, timestamp: number, data: T): Block => ({
 	type: BlockType.Transaction,
@@ -175,7 +173,4 @@ const mineBlock = <T>(index: number, previousHash: string, timestamp: number, da
 })
 
 const calculateHashForBlock = (block: Block): string => calculateHash(block.index, block.previousHash, block.timestamp, block.data);
-const calculateHash = (...items: any[]) => CryptoJS.SHA256(items.reduce(objectsToString, '')).toString();
-const objectsToString = (r, x) => r += stringify(x)
-const stringify = x => (typeof x === 'object') ? JSON.stringify(x) : safeToString(x)
-const safeToString = x => (x == null) ? '' : x.toString()
+
