@@ -1,4 +1,4 @@
-import * as transaction from '../transaction-pool'
+import * as transaction from '../core/transaction-pool'
 
 
 export const typeDefs = `

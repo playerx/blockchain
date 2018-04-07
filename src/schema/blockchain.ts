@@ -1,7 +1,7 @@
 // import { runWith } from "jokio"
-import * as blockchain from '../blockchain'
-import * as p2p from '../p2p'
-import { Block, Peer } from "../types";
+import * as blockchain from '../core/blockchain'
+import * as p2p from '../core/p2p'
+import { Block, Peer } from "../core/types";
 
 // const run = runWith({ errorFn: err => { throw err } })
 
