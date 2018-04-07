@@ -143,7 +143,7 @@ export const isValidChain = (blocks: Block[]) => {
 	return true
 }
 
-// types
+// function types
 export interface FindBlockProps {
 	index?: number
 	hash?: string

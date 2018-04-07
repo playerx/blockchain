@@ -9,18 +9,11 @@ import * as express from 'express'
 config()
 
 const { PORT } = process.env
+const port = parseInt(PORT, 10) || 3000
 
 const app = express();
-// const server = http.createServer(app)
-const port = parseInt(PORT, 10) || 3000
-const p2p = (state, context: Context) => {
-	initP2PServer2(context.server)
-	return state
-}
-const log = (state, context: Context) => {
-	console.log('Listening', context.server.address())
-	return state
-}
+const p2p = (state, context: Context) => initP2PServer2(context.server) || state
+const log = (state, context: Context) => console.log('Listening', context.server.address()) || state
 
 const graphqlProps = {
 	port,
