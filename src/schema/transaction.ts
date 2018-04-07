@@ -1,14 +1,24 @@
 import * as transactionPool from '../domain/transaction-pool'
-
+import * as app from '../application'
 
 export const typeDefs = `
 	extend type Query {
 		transactionPool: [Transaction!]!
+		transaction(id: ID!): Transaction
+		unspentTransactions: [UnspentTransaction!]!
 	}
 
-	# extend type Mutation {
-	# 	sendTransaction(info: SendTransactionInput!): Transaction!
-	# }
+	extend type Mutation {
+		sendCoins(data: sendCoinsInput!): Transaction!
+		addBalance(address: String!, description: String): Transaction!
+	}
+
+	type UnspentTransaction {
+		address: String!
+		amount: Float!
+		txOutId: ID
+		txOutIndex: Int
+	}
 
 	type Transaction {
 		id: ID!
@@ -28,9 +38,11 @@ export const typeDefs = `
 		amount: Float!
 	}
 
-	input SendTransactionInput {
-		address: String!
+	input sendCoinsInput {
+		fromAddress: String!
+		toAddress: String!
 		amount: Float!
+		privateKey: String!
 		description: String
 	}
 `
@@ -38,9 +50,15 @@ export const typeDefs = `
 export const resolvers = {
 	Query: {
 		transactionPool: () => transactionPool.getTransactionPool(),
+		unspentTransactions: () => transactionPool.getUnspentTxOuts(),
+		transaction: (_, { id }) => app.findTransaction(id),
 	},
 
 	Mutation: {
-		// sendTransaction: (_, props) => sendTransaction(props)
+		sendCoins: (_, { data }) =>
+			app.makeTransfer(data),
+
+		addBalance: (_, { address, description = '' }) =>
+			app.addBalance(address, description),
 	},
 }

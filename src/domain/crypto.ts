@@ -25,7 +25,7 @@ export const generatePrivateKey = (): string => {
 
 export const verify = (dataToVerify, signature, publicKey) => {
 	const key = ec.keyFromPublic(publicKey, 'hex');
-	return key.verify(dataToVerify.id, signature);
+	return key.verify(dataToVerify, signature);
 }
 
 export const calculateHash = (...objects: any[]) => {

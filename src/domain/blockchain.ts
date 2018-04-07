@@ -1,5 +1,7 @@
 import { calculateHash } from './crypto'
-import { Block, BlockType } from './types';
+import { Block, BlockType, UnspentTxOut } from './types';
+import { updateTransactionPool, getUnspentTxOuts } from './transaction-pool';
+import { processTransactions } from './transaction';
 
 
 // genesis block
@@ -26,10 +28,13 @@ export const replaceChain = (blocks: Block[]) => {
 		return false
 	}
 
-	if (!isValidChain(blocks)) {
+	const unspentTxOuts = isValidChain(blocks)
+	if (!unspentTxOuts) {
 		console.log('received blockchain is not valid')
 		return false
 	}
+
+	updateTransactionPool(unspentTxOuts)
 
 	blockchain.splice(0, blockchain.length)
 	blockchain.push(...blocks)
@@ -39,15 +44,19 @@ export const replaceChain = (blocks: Block[]) => {
 export const addBlockToChain = (block: Block) => {
 	const latestBlock = getLatestBlock()
 	if (!isValidBlockStructure(block)) {
-		console.log(1)
 		return false
 	}
 
 	if (!isValidNewBlock(block, latestBlock)) {
-		console.log(2, block, latestBlock)
 		return false
 	}
 
+	const newUnspentTxOuts = processTransactions(block.data, getUnspentTxOuts(), block.index);
+	if (!newUnspentTxOuts) {
+		return false
+	}
+
+	updateTransactionPool(newUnspentTxOuts)
 	blockchain.push(block)
 
 	return true
@@ -125,7 +134,7 @@ export const isValidChain = (blocks: Block[]) => {
 	Validate each block in the chain. The block is valid if the block structure is valid
 	  and the transaction are valid
 	 */
-	// let aUnspentTxOuts: UnspentTxOut[] = [];
+	let aUnspentTxOuts: UnspentTxOut[] = [];
 
 	for (let i = 0; i < blocks.length; i++) {
 		const currentBlock: Block = blocks[i];
@@ -133,14 +142,14 @@ export const isValidChain = (blocks: Block[]) => {
 			return null
 		}
 
-		// aUnspentTxOuts = processTransactions(currentBlock.data, aUnspentTxOuts, currentBlock.index);
-		// if (aUnspentTxOuts === null) {
-		// 	console.log('invalid transactions in blockchain');
-		// 	return null;
-		// }
+		aUnspentTxOuts = processTransactions(currentBlock.data, aUnspentTxOuts, currentBlock.index);
+		if (aUnspentTxOuts === null) {
+			console.log('invalid transactions in blockchain');
+			return null;
+		}
 	}
 
-	return true
+	return aUnspentTxOuts
 }
 
 

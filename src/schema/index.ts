@@ -1,11 +1,9 @@
 import * as blockchain from './blockchain';
 import * as transaction from './transaction';
+import * as wallet from './wallet';
 
-const localSchemas = [
+export const localSchemas = [
 	blockchain,
 	transaction,
-]
-
-export default [
-	...localSchemas
+	wallet,
 ]

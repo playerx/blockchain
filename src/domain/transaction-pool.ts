@@ -4,11 +4,15 @@ import { Transaction, UnspentTxOut, TxIn } from './types'
 
 
 let transactionPool: Transaction[] = []
-
+let unspentTxOuts: UnspentTxOut[] = []
 
 // public api
 export const getTransactionPool = (): Transaction[] => {
-	return _.cloneDeep(transactionPool);
+	return _.cloneDeep(transactionPool)
+}
+
+export const getUnspentTxOuts = () => {
+	return _.cloneDeep(unspentTxOuts)
 }
 
 export const addToTransactionPool = (tx: Transaction, unspentTxOuts: UnspentTxOut[]) => {
@@ -18,7 +22,7 @@ export const addToTransactionPool = (tx: Transaction, unspentTxOuts: UnspentTxOu
 	}
 
 	if (!isValidTxForPool(tx, transactionPool)) {
-		throw Error('Trying to add invalid tx to pool')
+		throw Error('Trying to add invalid tx to pool 2')
 	}
 
 	console.log('adding to txPool: %s', JSON.stringify(tx))
@@ -27,22 +31,24 @@ export const addToTransactionPool = (tx: Transaction, unspentTxOuts: UnspentTxOu
 	return transactionPool.length
 }
 
-// export const updateTransactionPool = (unspentTxOuts: UnspentTxOut[]) => {
-// 	const invalidTxs = [];
-// 	for (const tx of transactionPool) {
-// 		for (const txIn of tx.txIns) {
-// 			if (!hasTxIn(txIn, unspentTxOuts)) {
-// 				invalidTxs.push(tx);
-// 				break;
-// 			}
-// 		}
-// 	}
+export const updateTransactionPool = (newUnspentTxOut: UnspentTxOut[]) => {
+	unspentTxOuts = newUnspentTxOut;
 
-// 	if (invalidTxs.length > 0) {
-// 		console.log('removing the following transactions from txPool: %s', JSON.stringify(invalidTxs));
-// 		transactionPool = _.without(transactionPool, ...invalidTxs);
-// 	}
-// }
+	const invalidTxs = [];
+	for (const tx of transactionPool) {
+		for (const txIn of tx.txIns) {
+			if (!hasTxIn(txIn, unspentTxOuts)) {
+				invalidTxs.push(tx);
+				break;
+			}
+		}
+	}
+
+	if (invalidTxs.length > 0) {
+		console.log('removing the following transactions from txPool: %s', JSON.stringify(invalidTxs));
+		transactionPool = _.without(transactionPool, ...invalidTxs);
+	}
+}
 
 
 // validation functions
@@ -66,12 +72,12 @@ const isValidTxForPool = (tx: Transaction, aTtransactionPool: Transaction[]): bo
 
 
 // helper functions
-// const hasTxIn = (txIn: TxIn, unspentTxOuts: UnspentTxOut[]): boolean => {
-// 	const foundTxIn = unspentTxOuts.find((uTxO: UnspentTxOut) => {
-// 		return uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex
-// 	})
-// 	return foundTxIn !== undefined
-// }
+const hasTxIn = (txIn: TxIn, unspentTxOuts: UnspentTxOut[]): boolean => {
+	const foundTxIn = unspentTxOuts.find((uTxO: UnspentTxOut) => {
+		return uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex
+	})
+	return foundTxIn !== undefined
+}
 
 const getTxPoolIns = (aTransactionPool: Transaction[]): TxIn[] => {
 	return _(aTransactionPool)
