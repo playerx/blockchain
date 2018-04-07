@@ -1,21 +1,4 @@
-import * as blockchain from '../core/blockchain'
-import * as transaction from '../core/transaction'
-import * as transactionPool from '../core/transaction-pool'
-import * as wallet from '../core/wallet'
-
-const sendTransaction = ({ address, amount, description }) => {
-
-	const tx = wallet.createTransaction(address, amount, wallet.getPrivateKey(), blockchain.getUnspentTxOuts(), getTransactionPool());
-	addToTransactionPool(tx, getUnspentTxOuts());
-	broadCastTransactionPool();
-	return tx;
-
-
-	const tran = wallet.createTransaction(address, amount, )
-	transactionPool.addToTransactionPool()
-
-	return null
-}
+import * as transactionPool from '../domain/transaction-pool'
 
 
 export const typeDefs = `
@@ -23,9 +6,9 @@ export const typeDefs = `
 		transactionPool: [Transaction!]!
 	}
 
-	extend type Mutation {
-		sendTransaction(info: SendTransactionInput!): Transaction!
-	}
+	# extend type Mutation {
+	# 	sendTransaction(info: SendTransactionInput!): Transaction!
+	# }
 
 	type Transaction {
 		id: ID!
@@ -58,6 +41,6 @@ export const resolvers = {
 	},
 
 	Mutation: {
-		sendTransaction: (_, props) => sendTransaction(props)
+		// sendTransaction: (_, props) => sendTransaction(props)
 	},
 }

@@ -1,7 +1,7 @@
 import { uniqueId } from 'jokio'
 import * as WebSocket from 'ws'
-import { Message, MessageType, Block } from './types'
-import * as blockchain from "./blockchain"
+import { Message, MessageType, Block } from '../domain/types'
+import * as blockchain from '../domain/blockchain'
 
 type NamedWebSocket = WebSocket & {
 	id?: string,
@@ -20,14 +20,13 @@ export const initP2PServer = (host: string, port: number) => {
 	console.log('listening websocket p2p port on: ' + port)
 }
 
-export const initP2PServer2 = (server) => {
+export const initP2PServerWithServer = (server) => {
 	// serverEndpoint = `://${host}:${port}`
 
 	const wss: WebSocket.Server = new WebSocket.Server({ server, path: '/blockchain' })
 	wss.on('connection', (ws: NamedWebSocket) => initConnection(ws, false))
 	// console.log('listening websocket p2p port on: ' + port)
 }
-
 
 export const connectToPeer = (endpoint) => new Promise((resolve, reject) => {
 	if (~endpoint.indexOf(serverEndpoint))

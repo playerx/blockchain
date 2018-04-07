@@ -1,9 +1,6 @@
-// import { runWith } from "jokio"
-import * as blockchain from '../core/blockchain'
-import * as p2p from '../core/p2p'
-import { Block, Peer } from "../core/types";
-
-// const run = runWith({ errorFn: err => { throw err } })
+import * as blockchain from '../domain/blockchain'
+import { Block, Peer } from "../domain/types";
+import * as p2p from '../infrastructure/p2p'
 
 
 export const typeDefs = `

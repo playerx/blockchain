@@ -51,24 +51,7 @@ export const getBalance = (address: string, unspentTxOuts: UnspentTxOut[]): numb
 		.sum();
 }
 
-export const makeTransfer = (toAddress, amount) => {
-
-	const transactionPool = getTransactionPool()
-	const unspentTxOuts = []
-	const tx = createTransaction(toAddress, amount, unspentTxOuts, transactionPool)
-	addToTransactionPool(tx, unspentTxOuts)
-
-	// TODO: broadCastTransactionPool
-}
-
-
-
-// helper functions
-const findUnspentTxOuts = (ownerAddress: string, unspentTxOuts: UnspentTxOut[]) => {
-	return _.filter(unspentTxOuts, (uTxO: UnspentTxOut) => uTxO.address === ownerAddress);
-}
-
-const createTransaction = (receiverAddress: string, amount: number, unspentTxOuts: UnspentTxOut[], txPool: Transaction[]): Transaction => {
+export const createTransaction = (receiverAddress: string, amount: number, unspentTxOuts: UnspentTxOut[], txPool: Transaction[], description): Transaction => {
 
 	console.log('txPool: %s', JSON.stringify(txPool));
 	const myAddress: string = getPublicKey();
@@ -94,6 +77,7 @@ const createTransaction = (receiverAddress: string, amount: number, unspentTxOut
 		id: '',
 		txIns: unsignedTxIns,
 		txOuts: createTxOuts(receiverAddress, myAddress, amount, leftOverAmount),
+		description
 	}
 
 	const publicKey = getPublicKey()
@@ -107,6 +91,12 @@ const createTransaction = (receiverAddress: string, amount: number, unspentTxOut
 	})
 
 	return tx
+}
+
+
+// helper functions
+const findUnspentTxOuts = (ownerAddress: string, unspentTxOuts: UnspentTxOut[]) => {
+	return _.filter(unspentTxOuts, (uTxO: UnspentTxOut) => uTxO.address === ownerAddress);
 }
 
 const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) => {
