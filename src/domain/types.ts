@@ -32,6 +32,9 @@ export enum MessageType {
 	REQUEST_CHAIN = 'QUERY_ALL',
 	RECEIVED_LATEST_BLOCK = 'RECEIVED_LATEST_BLOCK',
 	RECEIVED_CHAIN = 'RECEIVED_BLOCKCHAIN',
+
+	REQUEST_TRANPOOL = 'REQUEST_TRANPOOL',
+	RECEIVED_TRANPOOL = 'RECEIVED_TRANPOOL',
 }
 
 export interface QueryLatestMessage {
@@ -52,6 +55,15 @@ export interface ResponseBlockchainMessage {
 	blocks: Block[]
 }
 
+export interface QueryTransactionPool {
+	type: MessageType.REQUEST_TRANPOOL
+}
+
+export interface ResponseTransactionPool {
+	type: MessageType.RECEIVED_TRANPOOL
+	transactions: Transaction[]
+}
+
 export interface MessageBase {
 	receiveTime?: number
 }
@@ -61,7 +73,9 @@ export type Message = MessageBase &
 		QueryLatestMessage |
 		QueryAllMessage |
 		AddBlockMessage |
-		ResponseBlockchainMessage
+		ResponseBlockchainMessage |
+		QueryTransactionPool |
+		ResponseTransactionPool
 	)
 
 

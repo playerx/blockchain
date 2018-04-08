@@ -4,7 +4,7 @@ import { Transaction, UnspentTxOut, TxIn } from './types'
 
 
 let transactionPool: Transaction[] = []
-let unspentTxOuts: UnspentTxOut[] = []
+let originalUnspentTxOuts: UnspentTxOut[] = []
 
 // public api
 export const getTransactionPool = (): Transaction[] => {
@@ -12,10 +12,11 @@ export const getTransactionPool = (): Transaction[] => {
 }
 
 export const getUnspentTxOuts = () => {
-	return _.cloneDeep(unspentTxOuts)
+	return _.cloneDeep(originalUnspentTxOuts)
 }
 
-export const addToTransactionPool = (tx: Transaction, unspentTxOuts: UnspentTxOut[]) => {
+export const addToTransactionPool = (tx: Transaction, aUnspentTxOuts: UnspentTxOut[] = null) => {
+	const unspentTxOuts = aUnspentTxOuts || getUnspentTxOuts()
 
 	if (!validateTransaction(tx, unspentTxOuts)) {
 		throw Error('Trying to add invalid tx to pool')
@@ -32,12 +33,12 @@ export const addToTransactionPool = (tx: Transaction, unspentTxOuts: UnspentTxOu
 }
 
 export const updateTransactionPool = (newUnspentTxOut: UnspentTxOut[]) => {
-	unspentTxOuts = newUnspentTxOut;
+	originalUnspentTxOuts = newUnspentTxOut;
 
 	const invalidTxs = [];
 	for (const tx of transactionPool) {
 		for (const txIn of tx.txIns) {
-			if (!hasTxIn(txIn, unspentTxOuts)) {
+			if (!hasTxIn(txIn, originalUnspentTxOuts)) {
 				invalidTxs.push(tx);
 				break;
 			}

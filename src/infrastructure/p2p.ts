@@ -1,7 +1,8 @@
 import { uniqueId } from 'jokio'
 import * as WebSocket from 'ws'
-import { Message, MessageType, Block } from '../domain/types'
+import { Message, MessageType, Block, Transaction } from '../domain/types'
 import * as blockchain from '../domain/blockchain'
+import * as tranPool from '../domain/transaction-pool'
 
 type NamedWebSocket = WebSocket & {
 	id?: string,
@@ -20,7 +21,7 @@ export const initP2PServer = (host: string, port: number) => {
 	console.log('listening websocket p2p port on: ' + port)
 }
 
-export const initP2PServerWithServer = (server) => {
+export const initP2PServerWithHttpServer = (server) => {
 	// serverEndpoint = `://${host}:${port}`
 
 	const wss: WebSocket.Server = new WebSocket.Server({ server, path: '/blockchain' })
@@ -48,6 +49,11 @@ export const getPeers = (onlyConnected = false) => {
 export const broadcastLatestBlock = () => broadcast({
 	type: MessageType.RECEIVED_LATEST_BLOCK,
 	block: blockchain.getLatestBlock(),
+})
+
+export const broadcastTransactionPool = () => broadcast({
+	type: MessageType.RECEIVED_TRANPOOL,
+	transactions: tranPool.getTransactionPool(),
 })
 
 
@@ -94,7 +100,7 @@ const handleMessage = (ws: NamedWebSocket, msg: Message) => {
 			break
 
 		case MessageType.RECEIVED_LATEST_BLOCK:
-			handleAddBlock(msg.block);
+			handleAddBlock(msg.block)
 			break
 
 		case MessageType.REQUEST_CHAIN:
@@ -105,11 +111,22 @@ const handleMessage = (ws: NamedWebSocket, msg: Message) => {
 			break
 
 		case MessageType.RECEIVED_CHAIN:
-			handleReplaceChain(msg.blocks);
+			handleReplaceChain(msg.blocks)
+			break
+
+		case MessageType.REQUEST_TRANPOOL:
+			send(ws)({
+				type: MessageType.RECEIVED_TRANPOOL,
+				transactions: tranPool.getTransactionPool(),
+			})
+			break
+
+		case MessageType.RECEIVED_TRANPOOL:
+			handleReceivedTranPool(msg.transactions)
 			break
 
 		default:
-			break;
+			break
 	}
 }
 
@@ -145,9 +162,35 @@ const handleReplaceChain = (receivedBlocks: Block[]) => {
 	broadcast({ type: MessageType.RECEIVED_LATEST_BLOCK, block: blockchain.getLatestBlock() })
 }
 
+const handleReceivedTranPool = (receivedTransactions: Transaction[]) => {
+	if (receivedTransactions === null) {
+		console.log('invalid transaction received')
+		return
+	}
+
+	let isAddedSuccessfully = false
+
+	receivedTransactions.forEach((tx: Transaction) => {
+		try {
+			tranPool.addToTransactionPool(tx)
+			isAddedSuccessfully = true
+		} catch (e) {
+			console.log(e.message)
+		}
+	})
+
+	if (isAddedSuccessfully) {
+		broadcast({
+			type: MessageType.RECEIVED_TRANPOOL,
+			transactions: tranPool.getTransactionPool(),
+		})
+	}
+}
+
 const isSocketConnected = (socket: WebSocket) => (socket.readyState === WebSocket.OPEN)
 
 const broadcast = (message: Message) => sockets.forEach(ws => send(ws)(message))
+
 const send = (ws: WebSocket) => (message: Message) => ws.send(JSON.stringify(message))
 
 
@@ -160,11 +203,6 @@ const webSocketToPeer = x => ({
 	messages: x.messages,
 	// commands: x.messages.map(messageToCommand),
 })
-
-// const messageToCommand = x => ({
-// 	receiveTime: x.receiveTime,
-// 	message: x
-// })
 
 const tryParse = (x: string) => {
 	try {

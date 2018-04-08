@@ -1,7 +1,7 @@
 import config from './config'
 import * as wallet from './domain/wallet'
 import * as p2p from './infrastructure/p2p'
-import { BlockType, Transaction, UnspentTxOut, Wallet } from 'domain/types';
+import { BlockType, Transaction, Wallet } from 'domain/types';
 import { getLatestBlock, generateNextBlockWithData, getBlockchain } from './domain/blockchain'
 import { getRewardTransaction, createTransaction, setRewardAmount } from './domain/transaction'
 import { getTransactionPool, addToTransactionPool, getUnspentTxOuts } from './domain/transaction-pool'
@@ -71,7 +71,6 @@ export const getAllWallets = (): Wallet[] => {
 	}, [])
 }
 
-
 export const findTransaction = (id) => {
 	const blocks = getBlockchain()
 	for (let block of blocks) {
@@ -134,7 +133,7 @@ export const start = (privateKey: string) => {
 const onTransactionAdded = (transactionPoolLength) => {
 
 	if (transactionPoolLength < config.minTxCountInBlockToBuild) {
-		// TODO: broadcast transaction pool
+		p2p.broadcastTransactionPool()
 		return
 	}
 
