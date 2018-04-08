@@ -175,7 +175,7 @@ export const isValidChain = (blocks: Block[]) => {
 	Validate each block in the chain. The block is valid if the block structure is valid
 	  and the transaction are valid
 	 */
-	let unspentTxOuts: UnspentTxOut[] = [];
+	let unspentTxOuts: UnspentTxOut[] = []
 
 	for (let i = 0; i < blocks.length; i++) {
 		if (i !== 0 && !isValidNewBlock(blocks[i], blocks[i - 1])) {
@@ -183,14 +183,16 @@ export const isValidChain = (blocks: Block[]) => {
 		}
 	}
 
+
+	// validate transactions only for transaction type blocks
 	const transactionBlocks = blocks.filter(x => x.type === BlockType.Transaction)
 
 	for (let i = 0; i < transactionBlocks.length; i++) {
-		const currentBlock: Block = transactionBlocks[i];
-		unspentTxOuts = processTransactions(currentBlock.data, unspentTxOuts, currentBlock.index);
+		const currentBlock: Block = transactionBlocks[i]
+		unspentTxOuts = processTransactions(currentBlock.data, unspentTxOuts, currentBlock.index)
 		if (unspentTxOuts === null) {
-			console.log('invalid transactions in blockchain');
-			return null;
+			console.log('invalid transactions in blockchain')
+			return null
 		}
 	}
 

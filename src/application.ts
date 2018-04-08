@@ -1,7 +1,7 @@
 import config from './config'
 import * as wallet from './domain/wallet'
 import * as p2p from './infrastructure/p2p'
-import { BlockType, Transaction } from 'domain/types';
+import { BlockType, Transaction, UnspentTxOut, Wallet } from 'domain/types';
 import { getLatestBlock, generateNextBlockWithData, getBlockchain } from './domain/blockchain'
 import { getRewardTransaction, createTransaction, setRewardAmount } from './domain/transaction'
 import { getTransactionPool, addToTransactionPool, getUnspentTxOuts } from './domain/transaction-pool'
@@ -43,13 +43,34 @@ export const getBalance = (address: string) => {
 	return wallet.getBalance(address, getUnspentTxOuts())
 }
 
-export const getCurrentWallet = () => {
+export const getCurrentWallet = (): Wallet => {
 	return {
-		publicKey: wallet.getPublicKey(),
-		privateKey: wallet.getPrivateKey(),
+		address: wallet.getPublicKey(),
 		balance: getBalance(wallet.getPublicKey()),
+		privateKey: wallet.getPrivateKey(),
 	}
 }
+
+export const getAllWallets = (): Wallet[] => {
+	const unspentTxOuts = getUnspentTxOuts()
+
+	return unspentTxOuts.reduce((r, x) => {
+		let wallet: Wallet = r.find(y => y.address === x.address)
+		if (!wallet) {
+			wallet = {
+				address: x.address,
+				balance: 0,
+			}
+
+			r.push(wallet)
+		}
+
+		wallet.balance += x.amount
+
+		return r
+	}, [])
+}
+
 
 export const findTransaction = (id) => {
 	const blocks = getBlockchain()

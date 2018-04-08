@@ -92,3 +92,10 @@ export interface UnspentTxOut {
 	readonly amount: number
 }
 
+
+// Wallet
+export interface Wallet {
+	address: string
+	balance: number
+	privateKey?: string
+}
