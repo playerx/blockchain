@@ -1,5 +1,4 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync, mkdirSync } from 'fs'
-import * as _ from 'lodash'
 import { UnspentTxOut } from './types'
 import * as crypto from './crypto'
 

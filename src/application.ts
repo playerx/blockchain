@@ -154,6 +154,6 @@ const onTransactionAdded = (transactionPoolLength) => {
 	mineNextBlock()
 }
 
-const onBlockAdded = (block) => {
+const onBlockAdded = (_) => {
 	p2p.broadcastLatestBlock()
 }
