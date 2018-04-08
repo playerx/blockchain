@@ -18,7 +18,11 @@ export const genesisBlock = {
 		miners: [
 			'0471fd6e57fffea06af51e059fb9c51d4d520439b61386d88cdd9912018dc2947f8909134c10be793f8a6fe44ae238bcbe508f0e2804e1a34801b73cfbc4d34090',
 			'04779b782b81bb0faa4caf0b1c6588e7e50a00e90c3b66c76757ba4382e4bfda37756dd5735e063fb6fd414c77d014ade5360e106831d09e797e77d4947c76be5d',
-		]
+		],
+		autoConnectUrls: [
+			'ws://localhost:3001/blockchain',
+			'ws://localhost:3002/blockchain',
+		],
 	}
 }
 

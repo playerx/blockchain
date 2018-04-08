@@ -6,10 +6,14 @@ import * as application from './application'
 import * as p2p from './infrastructure/p2p'
 import * as expressServer from 'express'
 
-config()
+if (process.env.NODE_ENV !== 'production') {
+	config()
+}
 
-const { PORT, PRIVATE_KEY: privateKey } = process.env
+const { PORT, PRIVATE_KEY: privateKey, DOMAIN: domain } = process.env
 const port = parseInt(PORT, 10) || 3000
+
+console.log(port, domain)
 
 const express = expressServer()
 const p2pServer = (state, context: Context) => p2p.initP2PServerWithHttpServer(context.server) || state
@@ -29,4 +33,4 @@ run(
 	log
 )
 
-application.start(privateKey)
+application.start(privateKey, domain)

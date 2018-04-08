@@ -2,7 +2,7 @@ import config from './config'
 import * as wallet from './domain/wallet'
 import * as p2p from './infrastructure/p2p'
 import { BlockType, Transaction, Wallet } from 'domain/types';
-import { getLatestBlock, generateNextBlockWithData, getBlockchain } from './domain/blockchain'
+import { getLatestBlock, generateNextBlockWithData, getBlockchain, genesisBlock } from './domain/blockchain'
 import { getRewardTransaction, createTransaction, setRewardAmount } from './domain/transaction'
 import { getTransactionPool, addToTransactionPool, getUnspentTxOuts } from './domain/transaction-pool'
 
@@ -135,10 +135,16 @@ export const mineNextBlock = (address = null, rewardTxDescription = 'Congrats! R
 	return block
 }
 
-export const start = (privateKey: string) => {
+export const start = (privateKey: string, domain: string) => {
 	setRewardAmount(config.rewardCoins)
 	wallet.initWallet(privateKey)
 	requestAutoBuildNextBlock()
+
+	p2p.setTransactionAddedHandler(onTransactionAdded)
+
+	genesisBlock.data.autoConnectUrls
+		.filter(endpoint => !~endpoint.indexOf(domain))
+		.forEach(endpoint => p2p.connectToPeer(endpoint))
 }
 
 
@@ -146,8 +152,9 @@ export const start = (privateKey: string) => {
 // events
 const onTransactionAdded = (transactionPoolLength) => {
 
+	p2p.broadcastTransactionPool()
+
 	if (transactionPoolLength < config.minTxCountInBlockToBuild) {
-		p2p.broadcastTransactionPool()
 		return
 	}
 

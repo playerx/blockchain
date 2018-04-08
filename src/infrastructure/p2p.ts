@@ -56,16 +56,18 @@ export const broadcastTransactionPool = () => broadcast({
 	transactions: tranPool.getTransactionPool(),
 })
 
+export const setTransactionAddedHandler = (handler) => onTransactionAdded = handler
 
 // internal state
 let serverEndpoint;
 const sockets: NamedWebSocket[] = []
+let onTransactionAdded = null
 
 
 // internal functions
 const initConnection = (ws: NamedWebSocket, isInitiator: boolean) => {
 
-	console.log('connected something')
+	console.log('connected endpoint')
 
 	ws.id = ws.id || uniqueId()
 	ws.name = isInitiator ? `PRIMARY ${ws.url}` : `SECONDARY ${Date.now()}`
@@ -174,18 +176,21 @@ const handleReceivedTranPool = (receivedTransactions: Transaction[]) => {
 		return
 	}
 
-	let isAddedSuccessfully = false
+	let poolLength = 0
 
 	receivedTransactions.forEach((tx: Transaction) => {
 		try {
-			tranPool.addToTransactionPool(tx)
-			isAddedSuccessfully = true
+			poolLength = tranPool.addToTransactionPool(tx)
 		} catch (e) {
 			console.log(e.message)
 		}
 	})
 
-	if (isAddedSuccessfully) {
+	if (poolLength) {
+		if (onTransactionAdded) {
+			onTransactionAdded(poolLength)
+		}
+
 		broadcast({
 			type: MessageType.RECEIVED_TRANPOOL,
 			transactions: tranPool.getTransactionPool(),

@@ -1,0 +1,10 @@
+{
+	"name": "toptal-blockchain-node2",
+	"alias": "toptal-blockchain-node2",
+	"env": {
+		"PRIVATE_KEY": "d121b606a19c06d3d9ef9551883d11eeb810e4044f2201dd851cf3f97a491f75",
+		"DOMAIN": "toptal-blockchain-node2.now.sh",
+		"NODE_ENV": "production",
+		"PORT": 443
+	}
+}
