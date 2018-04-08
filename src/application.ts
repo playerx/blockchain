@@ -16,10 +16,12 @@ export const requestAutoBuildNextBlock = () => {
 	autoBuildTimer = setTimeout(() => mineNextBlock(), config.blockAutoBuildIntervalInSec * 1000)
 }
 
-export const makeTransfer = ({ fromAddress, toAddress, amount, description = '', privateKey }) => {
-	const publicKey = fromAddress
+export const makeTransfer = ({ toAddress, amount, description = '' }) => {
+	const publicKey = wallet.getPublicKey()
+	const privateKey = wallet.getPrivateKey()
 	const transactionPool = getTransactionPool()
 	const unspentTxOuts = getUnspentTxOuts()
+	const fromAddress = publicKey
 
 	const tx = createTransaction(
 		fromAddress,
@@ -71,8 +73,20 @@ export const getAllWallets = (): Wallet[] => {
 	}, [])
 }
 
-export const findTransaction = (id) => {
+export const findTransaction = (id, blockIndex = null) => {
 	const blocks = getBlockchain()
+
+	if (blockIndex) {
+		const block = blocks.find(x => x.index === blockIndex)
+		if (block) {
+			const transactions: Transaction[] = block.data
+			const result = transactions.find(y => y.id === id)
+			if (result) {
+				return result
+			}
+		}
+	}
+
 	for (let block of blocks) {
 		if (block.type !== BlockType.Transaction) {
 			continue

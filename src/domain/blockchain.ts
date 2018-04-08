@@ -111,13 +111,13 @@ export const isValidNewBlock = (newBlock: Block, previousBlock: Block): boolean 
 		return false
 	}
 
-	if (!isValidMinerSignature(newBlock)) {
-		console.log('invalid miner signature on block: %s', JSON.stringify(newBlock))
+	if (!isValidMiner(newBlock)) {
+		console.log('invalid miner, PoA restriction')
 		return false
 	}
 
-	if (!~genesisBlock.data.miners.indexOf(newBlock.minerPublicKey)) {
-		console.log('invalid miner, PoA restriction')
+	if (!isValidMinerSignature(newBlock)) {
+		console.log('invalid miner signature on block: %s', JSON.stringify(newBlock))
 		return false
 	}
 
@@ -151,15 +151,6 @@ export const isValidBlockStructure = (block: Block) => {
 		typeof block.timestamp === 'number' &&
 		typeof block.minerSignature === 'string' &&
 		typeof block.data === 'object'
-}
-
-export const isValidMinerSignature = (block: Block) => {
-	const signedData = Object.assign({}, block)
-	delete signedData['minerSignature']
-
-	const signedDataString = JSON.stringify(signedData)
-
-	return verify(signedDataString, block.minerSignature, block.minerPublicKey)
 }
 
 export const isValidChain = (blocks: Block[]) => {
@@ -213,6 +204,10 @@ const blockchain: Block[] = [genesisBlock]
 
 
 // helper functions
+const isValidMiner = (block) => ~genesisBlock.data.miners.indexOf(block.minerPublicKey)
+
+const isValidMinerSignature = (block: Block) => verify(block.hash, block.minerSignature, block.minerPublicKey)
+
 const isValidTimestamp = (newBlock: Block, previousBlock: Block): boolean => {
 	return (previousBlock.timestamp < newBlock.timestamp)
 		&& (newBlock.timestamp <= Date.now())
@@ -233,7 +228,7 @@ const mineBlock = <T>(type: BlockType, index: number, previousHash: string, time
 	}
 
 	const minerSignature = privateKey
-		? sign(privateKey, JSON.stringify(block))
+		? sign(privateKey, block.hash)
 		: null
 
 	return {

@@ -31,6 +31,7 @@ export const typeDefs = `
 		txOutId: ID!
 		txOutIndex: Int!
 		signature: String!
+		transaction: Transaction
 	}
 
 	type TxOut {
@@ -39,10 +40,8 @@ export const typeDefs = `
 	}
 
 	input sendCoinsInput {
-		fromAddress: String!
 		toAddress: String!
 		amount: Float!
-		privateKey: String!
 		description: String
 	}
 `
@@ -57,5 +56,9 @@ export const resolvers = {
 	Mutation: {
 		sendCoins: (_, { data }) => app.makeTransfer(data),
 		mineTransactionBlock: (_, { description }) => app.mineNextBlock(null, description)
+	},
+
+	TxIn: {
+		transaction: ({ txOutIndex: blockIndex, txOutId: txId }) => app.findTransaction(txId, blockIndex)
 	},
 }

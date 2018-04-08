@@ -7,7 +7,7 @@ const ec = new ecdsa.ec('secp256k1')
 // public api
 export const sign = (privateKey, dataToSign) => {
 	const key = ec.keyFromPrivate(privateKey, 'hex')
-	const signature: string = toHexString(key.sign(dataToSign).toDER())
+	const signature = toHexString(key.sign(dataToSign).toDER())
 
 	return signature
 }

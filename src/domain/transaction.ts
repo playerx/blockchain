@@ -13,20 +13,21 @@ export const setRewardAmount = (amount) => {
 
 export const getTransactionId = (transaction: Transaction): string => {
 	const txInContent: string = transaction.txIns
-		.map((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex)
+		.map((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex + txIn.txOutAddress)
 		.reduce((a, b) => a + b, '')
 
 	const txOutContent: string = transaction.txOuts
 		.map((txOut: TxOut) => txOut.address + txOut.amount)
 		.reduce((a, b) => a + b, '')
 
-	return crypto.calculateHash(txInContent + txOutContent + (transaction.description || ''))
+	return crypto.calculateHash(txInContent + txOutContent + transaction.description)
 }
 
 export const getRewardTransaction = (address: string, blockIndex: number, rewardAmount, description: string = ''): Transaction => {
 	const txIn: TxIn = {
 		signature: '',
 		txOutId: '',
+		txOutAddress: '',
 		txOutIndex: blockIndex
 	}
 
@@ -47,28 +48,27 @@ export const getRewardTransaction = (address: string, blockIndex: number, reward
 	return t
 }
 
-export const signTxIn = (transaction: Transaction, txInIndex: number, publicKey: string, privateKey: string, aUnspentTxOuts: UnspentTxOut[]): string => {
-	const txIn: TxIn = transaction.txIns[txInIndex];
+export const signTxIn = (transaction: Transaction, txInIndex: number, publicKey: string, privateKey: string, unspentTxOuts: UnspentTxOut[]): string => {
+	const txIn = transaction.txIns[txInIndex]
+	const dataToSign = transaction.id
 
-	const dataToSign = transaction.id;
-	const referencedUnspentTxOut: UnspentTxOut = findUnspentTxOut(txIn.txOutId, txIn.txOutIndex, aUnspentTxOuts);
+	const referencedUnspentTxOut = findUnspentTxOut(txIn.txOutId, txIn.txOutIndex, unspentTxOuts)
 	if (referencedUnspentTxOut == null) {
-		console.log('could not find referenced txOut');
-		throw Error();
+		console.log('could not find referenced txOut')
+		throw Error()
 	}
-	const referencedAddress = referencedUnspentTxOut.address;
+	const referencedAddress = referencedUnspentTxOut.address
 
 	if (publicKey !== referencedAddress) {
 		console.log('trying to sign an input with private' +
-			' key that does not match the address that is referenced in txIn');
-		throw Error();
+			' key that does not match the address that is referenced in txIn', publicKey, referencedAddress)
+		throw Error()
 	}
 
-	const signature = crypto.sign(privateKey, dataToSign)
-	return signature
+	return crypto.sign(privateKey, dataToSign)
 }
 
-export const validateTransaction = (transaction: Transaction, aUnspentTxOuts: UnspentTxOut[]): boolean => {
+export const validateTransaction = (transaction: Transaction, unspentTxOuts: UnspentTxOut[]): boolean => {
 
 	if (getTransactionId(transaction) !== transaction.id) {
 		console.log('invalid tx id: ' + transaction.id);
@@ -76,7 +76,7 @@ export const validateTransaction = (transaction: Transaction, aUnspentTxOuts: Un
 	}
 
 	const hasValidTxIns: boolean = transaction.txIns
-		.map((txIn) => validateTxIn(txIn, transaction, aUnspentTxOuts))
+		.map((txIn) => validateTxIn(txIn, transaction, unspentTxOuts))
 		.reduce((a, b) => a && b, true)
 
 	if (!hasValidTxIns) {
@@ -84,16 +84,17 @@ export const validateTransaction = (transaction: Transaction, aUnspentTxOuts: Un
 		return false
 	}
 
-	const totalTxInValues: number = transaction.txIns
-		.map((txIn) => getTxInAmount(txIn, aUnspentTxOuts))
+	const totalTxInValue = transaction.txIns
+		.map((txIn) => getTxInAmount(txIn, unspentTxOuts))
 		.reduce((a, b) => (a + b), 0)
 
-	const totalTxOutValues: number = transaction.txOuts
+	const totalTxOutValue = transaction.txOuts
 		.map((txOut) => txOut.amount)
 		.reduce((a, b) => (a + b), 0)
 
-	if (totalTxOutValues !== totalTxInValues) {
-		console.log('totalTxOutValues !== totalTxInValues in tx: ' + transaction.id)
+	if (totalTxOutValue !== totalTxInValue) {
+		console.log('TRANSACTION_LOG', transaction)
+		console.log('totalTxOutValues !== totalTxInValues in tx: ' + transaction.id, totalTxOutValue, totalTxInValue)
 		return false
 	}
 
@@ -114,6 +115,7 @@ export const createTransaction = (senderAddress: string, receiverAddress: string
 		const txIn: TxIn = {
 			txOutId: unspentTxOut.txOutId,
 			txOutIndex: unspentTxOut.txOutIndex,
+			txOutAddress: senderAddress,
 			signature: '',
 		}
 		return txIn
@@ -131,28 +133,33 @@ export const createTransaction = (senderAddress: string, receiverAddress: string
 	tx.id = getTransactionId(tx)
 
 	tx.txIns = tx.txIns.map((txIn: TxIn, index: number) => {
-		txIn.signature = signTxIn(tx, index, publicKey, privateKey, unspentTxOuts)
+		txIn.signature = signTxIn(tx, index, publicKey, privateKey, senderUnspentTxOuts)
 		return txIn
 	})
 
 	return tx
 }
 
-export const processTransactions = (aTransactions: Transaction[], aUnspentTxOuts: UnspentTxOut[], blockIndex: number) => {
+export const processTransactions = (aTransactions: Transaction[], unspentTxOuts: UnspentTxOut[], blockIndex: number) => {
 
-	if (!validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex)) {
+	if (!validateBlockTransactions(aTransactions, unspentTxOuts, blockIndex)) {
 		console.log('invalid block transactions');
 		return null;
 	}
 
-	return updateUnspentTxOuts(aTransactions, aUnspentTxOuts, blockIndex);
+	return updateUnspentTxOuts(aTransactions, unspentTxOuts, blockIndex);
 }
 
 
 
 // validation functions
 const validateTxIn = (txIn: TxIn, transaction: Transaction, unspentTxOuts: UnspentTxOut[]): boolean => {
-	const referencedUTxOut = unspentTxOuts.find(x => (x.txOutId === txIn.txOutId) && (x.txOutIndex === txIn.txOutIndex))
+	const referencedUTxOut = unspentTxOuts.find(x =>
+		(x.txOutId === txIn.txOutId) &&
+		(x.txOutIndex === txIn.txOutIndex) &&
+		(x.address === txIn.txOutAddress)
+	)
+
 	if (referencedUTxOut == null) {
 		console.log('referenced txOut not found: ' + JSON.stringify(txIn))
 		return false
@@ -169,7 +176,7 @@ const validateTxIn = (txIn: TxIn, transaction: Transaction, unspentTxOuts: Unspe
 	return true
 }
 
-const validateBlockTransactions = (aTransactions: Transaction[], aUnspentTxOuts: UnspentTxOut[], blockIndex: number): boolean => {
+const validateBlockTransactions = (aTransactions: Transaction[], unspentTxOuts: UnspentTxOut[], blockIndex: number): boolean => {
 	const rewardTx = aTransactions[0];
 	if (!validateRewardTx(rewardTx, blockIndex)) {
 		console.log('invalid reward transaction: ' + JSON.stringify(rewardTx))
@@ -188,7 +195,7 @@ const validateBlockTransactions = (aTransactions: Transaction[], aUnspentTxOuts:
 
 	// all but coinbase transactions
 	const normalTransactions: Transaction[] = aTransactions.slice(1);
-	return normalTransactions.map((tx) => validateTransaction(tx, aUnspentTxOuts))
+	return normalTransactions.map((tx) => validateTransaction(tx, unspentTxOuts))
 		.reduce((a, b) => (a && b), true);
 
 }
@@ -253,12 +260,16 @@ const updateUnspentTxOuts = (aTransactions: Transaction[], aUnspentTxOuts: Unspe
 	return resultingUnspentTxOuts;
 }
 
-const findUnspentTxOut = (transactionId: string, index: number, aUnspentTxOuts: UnspentTxOut[]): UnspentTxOut => {
-	return aUnspentTxOuts.find((uTxO) => uTxO.txOutId === transactionId && uTxO.txOutIndex === index);
+const findUnspentTxOut = (transactionId: string, index: number, unspentTxOuts: UnspentTxOut[]): UnspentTxOut => {
+	return unspentTxOuts.find((x) => x.txOutId === transactionId && x.txOutIndex === index)
+}
+
+const findUnspentTxOutWithAddress = (transactionId: string, index: number, address: string, unspentTxOuts: UnspentTxOut[]): UnspentTxOut => {
+	return unspentTxOuts.find((x) => x.txOutId === transactionId && x.txOutIndex === index && x.address === address)
 }
 
 const getTxInAmount = (txIn: TxIn, aUnspentTxOuts: UnspentTxOut[]): number => {
-	return findUnspentTxOut(txIn.txOutId, txIn.txOutIndex, aUnspentTxOuts).amount;
+	return findUnspentTxOutWithAddress(txIn.txOutId, txIn.txOutIndex, txIn.txOutAddress, aUnspentTxOuts).amount;
 }
 
 const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) => {

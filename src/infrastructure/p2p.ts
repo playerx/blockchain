@@ -78,7 +78,13 @@ const initConnection = (ws: NamedWebSocket, isInitiator: boolean) => {
 	ws.on('close', () => closeConnection(ws))
 	ws.on('error', () => closeConnection(ws))
 
-	send(ws)({ type: MessageType.REQUEST_LATEST })
+	const sendMsg = send(ws)
+
+	sendMsg({ type: MessageType.REQUEST_LATEST })
+	sendMsg({
+		type: MessageType.RECEIVED_TRANPOOL,
+		transactions: tranPool.getTransactionPool(),
+	})
 }
 
 const closeConnection = (ws: WebSocket) => {

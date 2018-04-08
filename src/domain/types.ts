@@ -84,6 +84,7 @@ export type Message = MessageBase &
 export interface TxIn {
 	txOutId: string
 	txOutIndex: number
+	txOutAddress: string
 	signature: string
 }
 
