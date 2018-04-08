@@ -102,7 +102,7 @@ export const findTransaction = (id, blockIndex = null) => {
 	}
 }
 
-export const mineNextBlock = (address = null, rewardTxDescription = 'Congrats! Reward received.') => {
+export const mineNextBlock = (address = null, comment = 'Mined by me!', rewardTxDescription = 'Congrats! Reward received.') => {
 	const defaultAddress = wallet.getPublicKey()
 
 	const rewardTx = getRewardTransaction(
@@ -122,7 +122,7 @@ export const mineNextBlock = (address = null, rewardTxDescription = 'Congrats! R
 		transactions,
 		wallet.getPrivateKey(),
 		wallet.getPublicKey(),
-		'Mined by me!'
+		comment
 	)
 
 	if (!block) return

@@ -5,6 +5,7 @@ import { localSchemas } from './schema'
 import * as application from './application'
 import * as p2p from './infrastructure/p2p'
 import * as expressServer from 'express'
+import './admin-api'
 
 if (process.env.NODE_ENV !== 'production') {
 	config()

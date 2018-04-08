@@ -8,10 +8,10 @@ export const typeDefs = `
 		unspentTransactions: [UnspentTransaction!]!
 	}
 
-	extend type Mutation {
-		sendCoins(data: sendCoinsInput!): Transaction!
-		mineTransactionBlock(description: String): Block
-	}
+#	extend type Mutation {
+#		sendCoins(data: sendCoinsInput!): Transaction!
+#		mineTransactionBlock(description: String): Block
+#	}
 
 	type UnspentTransaction {
 		address: String!
@@ -54,8 +54,8 @@ export const resolvers = {
 	},
 
 	Mutation: {
-		sendCoins: (_, { data }) => app.makeTransfer(data),
-		mineTransactionBlock: (_, { description }) => app.mineNextBlock(null, description)
+		// sendCoins: (_, { data }) => app.makeTransfer(data),
+		// mineTransactionBlock: (_, { description }) => app.mineNextBlock(null, description)
 	},
 
 	TxIn: {
