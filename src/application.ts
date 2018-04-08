@@ -13,7 +13,7 @@ let autoBuildTimer = null
 // public api
 export const requestAutoBuildNextBlock = () => {
 	clearTimeout(autoBuildTimer)
-	autoBuildTimer = setTimeout(() => mineNextBlock(), config.blockBuildIntervalInSec * 1000)
+	autoBuildTimer = setTimeout(() => mineNextBlock(), config.blockAutoBuildIntervalInSec * 1000)
 }
 
 export const makeTransfer = ({ fromAddress, toAddress, amount, description = '', privateKey }) => {
@@ -47,6 +47,7 @@ export const getCurrentWallet = () => {
 	return {
 		publicKey: wallet.getPublicKey(),
 		privateKey: wallet.getPrivateKey(),
+		balance: getBalance(wallet.getPublicKey()),
 	}
 }
 
@@ -100,9 +101,9 @@ export const mineNextBlock = (address = null, rewardTxDescription = 'Congrats! R
 	return block
 }
 
-export const start = () => {
+export const start = (privateKey: string) => {
 	setRewardAmount(config.rewardCoins)
-	wallet.initWallet()
+	wallet.initWallet(privateKey)
 	requestAutoBuildNextBlock()
 }
 
@@ -111,7 +112,7 @@ export const start = () => {
 // events
 const onTransactionAdded = (transactionPoolLength) => {
 
-	if (transactionPoolLength < config.minTxCountInBlock) {
+	if (transactionPoolLength < config.minTxCountInBlockToBuild) {
 		// TODO: broadcast transaction pool
 		return
 	}

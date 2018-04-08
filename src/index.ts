@@ -8,7 +8,7 @@ import * as expressServer from 'express'
 
 config()
 
-const { PORT } = process.env
+const { PORT, PRIVATE_KEY: privateKey } = process.env
 const port = parseInt(PORT, 10) || 3000
 
 const express = expressServer()
@@ -29,4 +29,4 @@ run(
 	log
 )
 
-application.start()
+application.start(privateKey)

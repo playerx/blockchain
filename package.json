@@ -8,13 +8,14 @@
 	"scripts": {
 		"start": "NODE_PATH=./dist node dist",
 		"dev": "nodemon",
-		"dev:node2": "PORT=3001 ts-node -r tsconfig-paths/register ./src/index.ts",
-		"dev:node3": "PORT=3002 ts-node -r tsconfig-paths/register ./src/index.ts",
+		"dev:node2": "PORT=3001 PRIVATE_KEY=671665947fe5cd18429d308bc33974e9a5a048497d55c93ce2072cef9f230ebc ts-node -r tsconfig-paths/register ./src/index.ts",
+		"dev:node3": "PORT=3002 PRIVATE_KEY=d121b606a19c06d3d9ef9551883d11eeb810e4044f2201dd851cf3f97a491f75 ts-node -r tsconfig-paths/register ./src/index.ts",
 		"test": "ts-node ./node_modules/jokio/src/_test",
 		"deploy": "now && now alias",
 		"build": "tsc"
 	},
 	"dependencies": {
+		"@types/dotenv": "^4.0.3",
 		"apollo-cache-inmemory": "1.1.11",
 		"apollo-client": "2.2.7",
 		"apollo-link-ws": "1.0.7",
@@ -34,8 +35,8 @@
 		"nodemon": "1.14.11",
 		"ts-jest": "22.0.1",
 		"ts-node": "4.0.1",
-		"typescript": "2.6.2",
-		"tslint": "5.9.1"
+		"tslint": "5.9.1",
+		"typescript": "2.6.2"
 	},
 	"repository": {
 		"type": "git",

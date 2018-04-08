@@ -24,6 +24,9 @@ export const typeDefs = `
 		hash: String!
 		createdAt: DateTime!
 		data: JSON!
+		minerPublicKey: String!
+		minerSignature: String!
+		minerComment: String!
 		previousBlock: Block
 		nextBlock: Block
 	}

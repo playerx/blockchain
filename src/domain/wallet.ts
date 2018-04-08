@@ -1,44 +1,46 @@
-import { existsSync, readFileSync, unlinkSync, writeFileSync, mkdirSync, mkdir } from 'fs'
+import { existsSync, readFileSync, unlinkSync, writeFileSync, mkdirSync } from 'fs'
 import * as _ from 'lodash'
 import { UnspentTxOut } from './types'
 import * as crypto from './crypto'
 
 const privateKeyLocation = process.env.PRIVATE_KEY || 'wallet/private.key'
-
+let privateKey;
 
 
 // public api
 export const getPrivateKey = (): string => {
-	if (!existsSync(privateKeyLocation)) {
+	if (!privateKey) {
 		throw new Error('Private key doesnt exists')
 	}
 
-	const buffer = readFileSync(privateKeyLocation, 'utf8');
-	return buffer.toString();
+	return privateKey;
 }
 
 export const getPublicKey = (): string => {
-	if (!existsSync(privateKeyLocation)) {
-		throw new Error('Private key doesnt exists')
-	}
-
 	const privateKey = getPrivateKey();
 
 	return crypto.generatePublicKey(privateKey)
 }
 
-export const initWallet = () => {
-	if (existsSync(privateKeyLocation)) {
+export const initWallet = (key) => {
+	privateKey = key
+
+	if (privateKey) {
 		return
 	}
 
-	const newPrivateKey = crypto.generatePrivateKey()
+	if (!existsSync(privateKeyLocation)) {
+		const newPrivateKey = crypto.generatePrivateKey()
 
-	if (!existsSync('wallet/')) {
-		mkdirSync('wallet')
+		if (!existsSync('wallet/')) {
+			mkdirSync('wallet')
+		}
+
+		writeFileSync(privateKeyLocation, newPrivateKey);
 	}
 
-	writeFileSync(privateKeyLocation, newPrivateKey);
+	const buffer = readFileSync(privateKeyLocation, 'utf8');
+	privateKey = buffer.toString();
 }
 
 export const deleteWallet = () => {
@@ -48,13 +50,8 @@ export const deleteWallet = () => {
 }
 
 export const getBalance = (address: string, unspentTxOuts: UnspentTxOut[]): number => {
-	return _(findUnspentTxOuts(address, unspentTxOuts))
-		.map((uTxO: UnspentTxOut) => uTxO.amount)
-		.sum();
-}
-
-
-// helper functions
-const findUnspentTxOuts = (ownerAddress: string, unspentTxOuts: UnspentTxOut[]) => {
-	return _.filter(unspentTxOuts, (uTxO: UnspentTxOut) => uTxO.address === ownerAddress);
+	return unspentTxOuts
+		.filter(x => x.address === address)
+		.map(x => x.amount)
+		.reduce((a, b) => a + b, 0)
 }
