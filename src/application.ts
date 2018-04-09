@@ -48,8 +48,7 @@ export const getBalance = (address: string) => {
 export const getCurrentWallet = (): Wallet => {
 	return {
 		address: wallet.getPublicKey(),
-		balance: getBalance(wallet.getPublicKey()),
-		privateKey: wallet.getPrivateKey(),
+		balance: getBalance(wallet.getPublicKey())
 	}
 }
 

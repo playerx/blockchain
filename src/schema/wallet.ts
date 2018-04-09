@@ -10,7 +10,6 @@ export const typeDefs = `
 	type Wallet {
 		address: String!
 		balance: Float!
-		privateKey: String
 	}
 `
 
